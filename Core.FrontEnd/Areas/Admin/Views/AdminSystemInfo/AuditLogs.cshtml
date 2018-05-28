@@ -1,0 +1,96 @@
+﻿@model dynamic
+
+@{
+    ViewBag.Title = "Audit logs";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Audit logs</h2>
+<input id="txtSearch" type="text" value="" placeholder="keywords"/> <button onclick="AuditLogs.refresh()">Search</button>
+<table id="tblView"></table>
+@section scripts
+{
+    <script>
+        AuditLogs = {
+            _$tblView: $('#tblView'),
+            _$txtSearch: $('#txtSearch'),
+            init:function() {
+                AuditLogs.initTable();
+            },
+            initTable: function() {
+                AuditLogs._$tblView.bootstrapTable({
+                    idField: 'Id',
+                    //data: AdminUser.arrayCheckedIds,
+                    method: 'post',
+                    url: '/Admin/AdminSystemInfo/ListAuditLog?__=' + (new Date().getTime()),
+                    sidePagination: 'server',
+                    pagination: true,
+                    showToggle: false,
+                    minimumCountColumns: 1,
+                    pageSize: 10,
+                    pageList: [10, 20, 50, 100, 200],
+                    showColumns: false,
+                    showRefresh: false,
+                    sortName: 'CreatedDate',
+                    sortOrder: 'desc',
+                    queryParams: function(p) {
+                        var keywords = '';
+                        if (AuditLogs._$txtSearch) {
+                            keywords = AuditLogs._$txtSearch.val();
+                        }
+                        return {
+                            sortField: p.sort,
+                            orderBy: p.order,
+                            take: p.limit,
+                            skip: p.offset,
+                            keywords: keywords
+                        };
+                    },
+                    columns: [
+                        {
+                            field: 'CommandType',
+                            title: 'Action',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                var divIdData = 'actionData-' + row.Id;
+                                var temp =value+ ' <a onclick="$(\'#' + divIdData + '\').show()">detail</a>';
+                                var xxx = '<a onclick="$(\'#' + divIdData + '\').hide()">hide</a><br>';
+                                temp += '<div id="' + divIdData + '" style="display:none; width:300px;overflow:auto">'
+                                    + xxx + row.CommandData + '</div>';
+                                return temp;
+                            }
+                        },
+                        {
+                            field: 'Username',
+                            title: 'By User',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                var temp = value;
+                                temp += '<br>' + row.Phone;
+                                temp += '<br>' + row.Email;
+                                return temp;
+                            }
+                        }, {
+                            field: 'CreatedDate',
+                            title: 'CreatedDate',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                var temp = Util.dateTimeFromJson(value);
+                                return temp;
+                            }
+                        }
+                    ]
+                });
+
+            },
+            refresh:function() {
+                AuditLogs._$tblView.bootstrapTable('refresh');
+            }
+        }
+
+        AuditLogs.init();
+    </script>
+}

@@ -1,0 +1,303 @@
+﻿@using DomainDrivenDesign.Core
+@model Core.FrontEnd.Areas.Admin.Models.ProductListAdminPage
+
+@{
+    ViewBag.Title = "List product";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    var defaultLang = EngineeCurrentContext.GetDefaultLanguage();
+    var currentLang = EngineeCurrentContext.GetCurrentLanguage();
+}
+
+<h2>Product management</h2>
+<div>
+    <a href="/Admin/AdminProduct/Edit/?id=@(Guid.Empty)">Create new</a>
+</div>
+<div class="search-area">
+    <ul class="navbar-nav mr-auto">
+        <li class="nav-item dropdown">
+            <button id="navbarDropdown"
+                    role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                    onclick="AdminCategoryCheckboxTree.showTree()">
+                Choose categories
+            </button>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdown"
+                 style="display: none" id="bound-category-tree">
+                <button onclick="AdminCategoryCheckboxTree.checkAll()">Check all</button>
+                <button onclick="AdminCategoryCheckboxTree.clearAllChecked()">Clear all checked</button>
+                <button onclick="AdminCategoryCheckboxTree.hideTree()">Hide</button>
+                <div id="category-tree" class=""></div>
+            </div>
+        </li>
+    </ul>
+    <input id="txtSearch" value="" placeholder="type keywords to search" />
+    <button type="button" onclick="ProductList.refresh()">Search</button>
+</div>
+<table id="tblView"></table>
+
+@section scripts
+{
+    <script>
+        AdminCategoryCheckboxTree = {
+            _$checkBoxTree:null,
+            loadTree: function () {
+                    $('#category-tree').on('changed.jstree',
+                        function (e, data) {
+                            //var i, j, r = [];
+                            //for (i = 0, j = data.selected.length; i < j; i++) {
+                            //    r.push(data.instance.get_node(data.selected[i]));
+                            //}
+                            //if (r.length > 0) {
+                            //    $('#categoryId').val(r[0].id);
+                            //    $('#categoryTitle').text(r[0].text);
+                            //    AdminCategoryCheckboxTree.hideTree();
+                            //}
+                        }
+                    )
+                    .on('select_node.jstree', function (e, data) {
+                        if (data.event) {
+                            data.instance.select_node(data.node.children_d);
+                        }
+                    })
+                    .on('deselect_node.jstree', function (e, data) {
+                        if (data.event) {
+                            data.instance.deselect_node(data.node.children_d);
+                        }
+                    })
+                    .jstree({
+                        "core": {
+                            "themes": {
+                                "responsive": false
+                            },
+                            "check_callback": true,
+                            'data': {
+                                'url': function (node) {
+                                    return '/Admin/AdminProduct/CategoryTree';
+                                },
+                                'data': function (node) {
+                                    return { 'id': node.id };
+                                }
+                            }
+                        },
+                        "types": {
+                            "default": {
+                                "icon": "fa fa-folder icon-state-warning icon-lg"
+                            },
+                            "root": {
+                                "icon": "fa fa-folder icon-state-warning icon-lg"
+                            },
+                            "file": {
+                                "icon": "fa fa-file icon-state-warning icon-lg"
+                            }
+                        },
+                        "plugins": ["types", "checkbox"]
+                    });
+            }
+            , showTree: function () {
+                $('#bound-category-tree').show();
+            },
+            hideTree: function () {
+                $('#bound-category-tree').hide();
+            },
+            getCheckedIds:function() {
+                var checkedIds = [];
+
+                var arrChecked = $('#category-tree').jstree("get_checked",null, true);
+
+                for (var i = 0; i < arrChecked.length; i++) {
+                    checkedIds.push(arrChecked[i]);
+                }
+                return checkedIds;
+            },
+            clearAllChecked:function() {
+                $('#category-tree').jstree('uncheck_all');
+            },
+            checkAll: function () {
+                $('#category-tree').jstree('check_all');
+            }
+        }
+
+
+        AdminCategoryCheckboxTree.loadTree();
+    </script>
+    <script>
+        ProductList = {
+            _$tblView: null,
+            _guidEmpty: '@Guid.Empty.ToString()',
+            _$txtSearch: null,
+            _categoryId: null,
+            init: function($tblView, $txtSearch, categoryId) {
+                ProductList._categoryId = categoryId;
+                ProductList._$tblView = $tblView;
+                ProductList._$txtSearch = $txtSearch;
+
+                ProductList.initTable();
+            },
+            delete: function(id) {
+                bootbox.confirm('Do you want to DELETE?', function(result) {
+                    if (!result) return;
+
+                    $.post('/Admin/AdminProduct/Delete',
+                            {
+                                id: id
+                            })
+                        .done(function(data) {
+                            if (data.Ok) {
+                                toastr.success(data.Message);
+                                ProductList._$tblView.bootstrapTable('refresh');
+                            } else {
+                                toastr.error(data.Message);
+                            }
+                        }).fail(function() {
+                            bootbox.alert({
+                                message: "Can not make request, check your internet and try to reload page",
+                                backdrop: true
+                            });
+                        });
+                });
+
+            },
+            publish: function(id,isPublish) {
+                var msgTitle = 'Do you want to PUBLISH?';
+                if (isPublish != true) {
+                    msgTitle = 'Do you want to UNPUBLISH?';
+                }
+                bootbox.confirm(msgTitle,
+                    function(result) {
+                        if (!result) return;
+
+                        $.post('/Admin/AdminProduct/Publish',
+                                {
+                                    id: id,
+                                    isPublish: isPublish
+                                })
+                            .done(function(data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                    ProductList._$tblView.bootstrapTable('refresh');
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function() {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+                    });
+
+            }
+            ,
+            initTable: function() {
+                ProductList._$tblView.bootstrapTable({
+                    idField: 'Id',
+                    //data: AdminUser.arrayCheckedIds,
+                    method: 'post',
+                    url: '/Admin/AdminProduct/List?__=' + (new Date().getTime()),
+                    sidePagination: 'server',
+                    pagination: true,
+                    showToggle: false,
+                    minimumCountColumns: 1,
+                    pageSize: 10,
+                    pageList: [10, 20, 50, 100, 200],
+                    showColumns: false,
+                    showRefresh: false,
+                    sortName: 'CreatedDate',
+                    sortOrder: 'desc',
+                    queryParams: function(p) {
+                        var keywords = '';
+                        if ( ProductList._$txtSearch) {
+                            keywords =  ProductList._$txtSearch.val();
+                        }
+                        return {
+                            sortField: p.sort,
+                            orderBy: p.order,
+                            take: p.limit,
+                            skip: p.offset,
+                            keywords: keywords,
+                            categoryId: '@Model.CategoryId',
+                            categoryIds: AdminCategoryCheckboxTree.getCheckedIds()
+                        };
+                    },
+                    columns: [
+                        {
+                            field: 'UrlImage',
+                            title: '',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                if (row.UrlImage == null) {
+                                    row.UrlImage = "/Content/imgs/no-image.png";
+                                }
+                                return '<a target="_blank" href="/product/' + row.SeoUrlFriendly+'">' +
+                                    '<img class="item-img" src="' + row.UrlImage + '" alt="' + row.ProductCode+'" /></a>';
+
+                            },
+                            width:90
+                        },
+                        {
+                            field: 'Title',
+                            title: 'Title',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function(value, row) {
+                                var temp = '[' + row.ProductCode + '] ' + value;
+                                if (row.Published) {
+                                    temp += '<br>- Publised';
+                                } else {
+                                    temp += '<br>- Unpublised';
+                                }
+                                if (row.AllowComment) {
+                                    temp += '<br>- AllowComment';
+                                } else {
+                                    temp += '<br>- No-AllowComment';
+                                }
+                                return temp;
+                            }
+                        }, {
+                            field: 'Price',
+                            title: 'Price',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                var temp = value + ' @defaultLang.CurrencyCode';
+                                var clId = '@currentLang.Id';
+                                var dlId = '@defaultLang.Id';
+                                if (clId != dlId) {
+                                    temp += '<br> ' + (parseFloat(value) * parseFloat('@currentLang.CurrencyExchangeRate'))
+                                        + ' @currentLang.CurrencyCode (Price in @currentLang.Title)';
+                                }
+                               
+                                return temp;
+                            }
+                        }, {
+                            field: 'Id',
+                            title: '',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function(value, row) {
+                                var temp = '<a href="/Admin/AdminProduct/Edit/?id=' +
+                                    row.Id +'">Edit</a>';
+                                temp += ' | <a href="javascript:" onclick=" ProductList.delete(\'' + row.Id + '\')">Delete</a>';
+                                if (row.Published) {
+                                    temp += ' | <a href="javascript:" onclick=" ProductList.publish(\'' + row.Id + '\',false)">Unpublish</a>';
+                                } else {
+                                    temp += ' | <a href="javascript:" onclick=" ProductList.publish(\'' + row.Id + '\',true)">Publish</a>';
+                                }
+                                return temp;
+                            }
+                        }
+                    ]
+                });
+
+            }
+            ,
+            refresh: function () {
+                ProductList._$tblView.bootstrapTable('refresh');
+            }
+        }
+
+        ProductList.init($('#tblView'), $('#txtSearch'));
+    </script>
+    
+ 
+}

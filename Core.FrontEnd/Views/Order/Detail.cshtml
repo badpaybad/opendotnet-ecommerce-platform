@@ -1,0 +1,16 @@
+﻿@using DomainDrivenDesign.Core
+@model DomainDrivenDesign.CoreEcommerce.Ef.ShoppingCart
+
+@{
+    ViewBag.Title = "Order detail";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Order detail</h2>
+
+<h3>Order code: @Model.OrderCode</h3>
+<div>Created date: @Model.CreatedDate</div>
+<h4>Order Status: @((Enums.ShoppingCartStatus)Model.Status)</h4>
+<h4>Payment Status: @((Enums.ShoppingCartPayStatus)Model.PaymentStatus)</h4>
+<h4>Packing Status: @((Enums.ShoppingCartPackingStatus)Model.PackingStatus)</h4>
+<h4>Shipping Status: @((Enums.ShoppingCartShipStatus)Model.ShippingStatus)</h4>

@@ -1,0 +1,199 @@
+﻿@using DomainDrivenDesign.CorePermission
+@if (UserSessionContext.CurrentUser() == null)
+{
+    <span></span>
+}
+else
+{
+    <div class="page-sidebar-wrapper" id="left-menu">
+        <div class="page-sidebar navbar-collapse collapse">
+           
+            <ul class="page-sidebar-menu  page-header-fixed " data-keep-expanded="false" data-auto-scroll="true" data-slide-speed="200" style="padding-top: 20px">
+                <li class="sidebar-toggler-wrapper hide">
+                    <div class="sidebar-toggler"> </div>
+                </li>
+                <li class="nav-item">
+                    <a href="/Admin/AdminHome/Index">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <div class="sidebar-category-tree">
+                        <div class="heading uppercase">
+                            <span style="font-size: 14px;">
+                                CMS Frontend
+                                <a href="/" target="_blank" title="open FE page"> >> </a>
+                            </span>
+                        </div>
+                        <div>
+                            <a href="/Admin/AdminHome/HomePageSettings" class="nav-link">
+                                <i class="fa fa-folder-o"></i>
+                                <span class="title">Home settings</span>
+                            </a>
+                    
+                            <div id="sidebar-cms-category-tree"></div>
+                        </div>
+                    </div>
+                </li>
+                <li class="heading">
+                    <h3 class="uppercase">CMS</h3>
+                </li>
+                <li class="nav-item  ">
+                    <a href="/Admin/AdminCategory/Index" class="nav-link">
+                        <i class="fa fa-folder-o"></i>
+                        <span class="title">Category management</span>
+                    </a>
+                </li>
+                <li class="nav-item  ">
+                    <a href="/Admin/AdminRoxyFileman/Index" class="nav-link">
+                        <i class="icon-picture"></i>
+                        <span class="title">Files management</span>
+                    </a>
+                </li>
+                <li class="heading">
+                    <h3 class="uppercase">Ecommerce</h3>
+                </li>
+                <li class="nav-item">
+                    <a href="/Admin/AdminOrder/Index" class="nav-link">
+                        <i class="fa fa-object-group"></i>
+                        <span class="title">Order management</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/Admin/AdminPackingAndLabel/Index" class="nav-link">
+                        <i class="icon-social-dropbox"></i>
+                        <span class="title">Order packing and label</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/Admin/AdminOrderShipping/Index" class="nav-link">
+                        <i class="fa fa-truck"></i>
+                        <span class="title">Order shipping</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/Admin/AdminProduct/Index" class="nav-link">
+                        <i class="icon-drawer"></i>
+                        <span class="title">Product management</span>
+                    </a>
+                    <div id="sidebar-ecommerce-category-tree" class="sidebar-category-tree"></div>
+                </li>
+                <li class="nav-item">
+                    <a href="/Admin/AdminSupplier/Index" class="nav-link">
+                        <i class="fa fa-industry"></i>
+                        <span class="title">Supplier management</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="javascript:" class="nav-toggle nav-link">
+                        <i class="icon-tag"></i>
+                        <span class="title">Voucher management</span>
+                        <span class="arrow open"></span>
+                    </a>
+                    <ul class="sub-menu">
+                        <li class="nav-item">
+                            <a href="/Admin/AdminVoucher/Index" class="nav-link">
+                                <i class="fa fa-tag"></i>
+                                <span class="title">Voucher methods</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/Admin/AdminVoucher/ListCode" class="nav-link">
+                                <i class="fa fa-tags"></i>
+                                <span class="title">Voucher codes</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a href="/Admin/AdminPayment/Index" class="nav-link">
+                        <i class="fa fa-credit-card"></i>
+                        <span class="title">Payment methods</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/Admin/AdminShipping/Index" class="nav-link">
+                        <i class="icon-plane"></i>
+                        <span class="title">Shipping methods</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/Admin/AdminProductPromotion/Index" class="nav-link">
+                        <i class="fa fa-gift"></i>
+                        <span class="title">Product's promotion</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/Admin/AdminOrderPromotion/Index" class="nav-link">
+                        <i class="fa fa-cubes"></i>
+                        <span class="title">Order's promotion</span>
+                    </a>
+                </li>
+                <li class="heading">
+                    <h3 class="uppercase">System</h3>
+                </li>
+                <li class="nav-item  ">
+                    <a href="/Admin/AdminUser/Index" class="nav-link">
+                        <i class="icon-user"></i>
+                        <span class="title">User management</span>
+                    </a>
+                </li>
+                <li class="nav-item  ">
+                    <a href="/Admin/AdminRole/Index" class="nav-link">
+                        <i class="icon-puzzle"></i>
+                        <span class="title">Role & right management</span>
+                    </a>
+                </li>
+                <li class="nav-item  ">
+                    <a href="/Admin/AdminCache/Index" class="nav-link">
+                        <i class="icon-list"></i>
+                        <span class="title">Cache management</span>
+                    </a>
+                </li>  
+                <li class="nav-item  ">
+                    <a href="/Admin/UserEmailMessage/Index" class="nav-link">
+                        <i class="fa fa-envelope-square"></i>
+                        <span class="title">User email management</span>
+                    </a>
+                </li>
+                <li class="nav-item  ">
+                    <a href="/Admin/AdminSystemInfo/RegisterCommandsAndEvents" class="nav-link">
+                        <i class="fa fa-cog"></i>
+                        <span class="title">Re-register commands & events</span>
+                    </a>
+                </li>
+                <li class="nav-item  ">
+                    <a href="/Admin/AdminSystemInfo/ContactUsInfo" class="nav-link">
+                        <i class="icon-envelope-letter"></i>
+                        <span class="title">Contact us messages</span>
+                    </a>
+                </li>
+                <li class="nav-item  ">
+                    <a href="/Admin/AdminSystemInfo/SystemNotification" class="nav-link">
+                        <i class="fa fa-commenting-o"></i>
+                        <span class="title">System messages</span>
+                    </a>
+                </li>
+                <li class="nav-item  ">
+                    <a href="/Admin/AdminSystemInfo/LanguageManagement" class="nav-link">
+                        <i class="fa fa-language"></i>
+                        <span class="title">Language management</span>
+                    </a>
+                </li>
+                <li class="nav-item  ">
+                    <a href="/Admin/AdminSystemInfo/AuditLogs" class="nav-link">
+                        <i class="fa fa-history"></i>
+                        <span class="title">Audit logs</span>
+                    </a>
+                </li>
+                <li class="nav-item  ">
+                    <a href="/Admin/AdminCommandWorker/Index" class="nav-link">
+                        <i class="fa fa-odnoklassniki-square"></i>
+                        <span class="title">Command Workers</span>
+                    </a>
+                </li>
+            </ul>
+
+        </div>
+    </div>
+}
+
+

@@ -1,0 +1,140 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{26411D2E-34BC-438A-8C40-288A6CFE1335}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>DomainDrivenDesign.CoreEcommerce</RootNamespace>
+    <AssemblyName>DomainDrivenDesign.CoreEcommerce</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Commands\AddImagesToProduct.cs" />
+    <Compile Include="Commands\ChangeProductToCategories.cs" />
+    <Compile Include="Commands\CreateProduct.cs" />
+    <Compile Include="Commands\DeleteProduct.cs" />
+    <Compile Include="Commands\OrderPromotionCommandHandles.cs" />
+    <Compile Include="Commands\PaymentMethodCommandHandles.cs" />
+    <Compile Include="Commands\PaymentTransactionCommandHandles.cs" />
+    <Compile Include="Commands\PaymentTransactionCommands.cs" />
+    <Compile Include="Commands\ProductCommandHandles.cs" />
+    <Compile Include="Commands\ProductPromotionCommandHandles.cs" />
+    <Compile Include="Commands\PublishProduct.cs" />
+    <Compile Include="Commands\RemoveImagesFromProduct.cs" />
+    <Compile Include="Commands\ShippingMethodCommandHandles.cs" />
+    <Compile Include="Commands\ShoppingCartCommandHandles.cs" />
+    <Compile Include="Commands\ShoppingCartCommands.cs" />
+    <Compile Include="Commands\SupplierCommandHandles.cs" />
+    <Compile Include="Commands\UpdateProduct.cs" />
+    <Compile Include="Commands\UpdateProductForSeo.cs" />
+    <Compile Include="Commands\VocherMethodCommandHandles.cs" />
+    <Compile Include="Commands\VoucherCodeCommands.cs" />
+    <Compile Include="DomainOrderPromotion.cs" />
+    <Compile Include="DomainPaymentTransaction.cs" />
+    <Compile Include="DomainProduct.cs" />
+    <Compile Include="DomainProductPromotion.cs" />
+    <Compile Include="DomainShoppingCart.cs" />
+    <Compile Include="DomainSupplier.cs" />
+    <Compile Include="DomainVoucherCode.cs" />
+    <Compile Include="EngineeEcommerce.cs" />
+    <Compile Include="Ef\CoreEcommerceDbContext.cs" />
+    <Compile Include="Ef\PaymentMethod.cs" />
+    <Compile Include="Ef\PaymentTransaction.cs" />
+    <Compile Include="Ef\Product.cs" />
+    <Compile Include="Ef\ShippingMethod.cs" />
+    <Compile Include="Ef\ShoppingCart.cs" />
+    <Compile Include="Ef\ShoppingCartItem.cs" />
+    <Compile Include="Ef\ShoppingCartShippingAddress.cs" />
+    <Compile Include="Ef\VoucherCode.cs" />
+    <Compile Include="Ef\VoucherMethod.cs" />
+    <Compile Include="Events\OrderPromotionEventHandles.cs" />
+    <Compile Include="Events\PaymentTransactionEventHandles.cs" />
+    <Compile Include="Events\PaymentTransactionEvents.cs" />
+    <Compile Include="Events\ProductAddedImage.cs" />
+    <Compile Include="Events\ProductCreated.cs" />
+    <Compile Include="Events\ProductDeleted.cs" />
+    <Compile Include="Events\ProductEventHandles.cs" />
+    <Compile Include="Events\ProductPriceChanged.cs" />
+    <Compile Include="Events\ProductPromotionEventHandles.cs" />
+    <Compile Include="Events\ProductRemovedImages.cs" />
+    <Compile Include="Events\ProductUnpublished.cs" />
+    <Compile Include="Events\ProductPublished.cs" />
+    <Compile Include="Events\ProductUpdated.cs" />
+    <Compile Include="Events\ShoppingCartEventHandles.cs" />
+    <Compile Include="Events\ShoppingCartEvents.cs" />
+    <Compile Include="Commands\VoucherCodeCommandHandles.cs" />
+    <Compile Include="Events\VoucherCodeEventHandles.cs" />
+    <Compile Include="Events\VoucherCodeEvents.cs" />
+    <Compile Include="Events\VoucherEventHandles.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\OrderCodeServices.cs" />
+    <Compile Include="Services\OrderPromotionServices.cs" />
+    <Compile Include="Services\PaymentMethodServices.cs" />
+    <Compile Include="Services\ProductSearchServices.cs" />
+    <Compile Include="Services\ProductPromotionServices.cs" />
+    <Compile Include="Services\ShipingMethodServices.cs" />
+    <Compile Include="Services\VoucherCodeServices.cs" />
+    <Compile Include="Workfollows\OrderWorkfollows.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DomainDrivenDesign.CoreCms\DomainDrivenDesign.CoreCms.csproj">
+      <Project>{036f8ec7-54cc-4eed-946f-6eb8be23e61c}</Project>
+      <Name>DomainDrivenDesign.CoreCms</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DomainDrivenDesign.CorePermission\DomainDrivenDesign.CorePermission.csproj">
+      <Project>{aa483e55-fe1a-4473-8e4e-38cd69cd319f}</Project>
+      <Name>DomainDrivenDesign.CorePermission</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DomainDrivenDesign.Core\DomainDrivenDesign.Core.csproj">
+      <Project>{94db03a1-6cc1-4c92-8742-de9202416323}</Project>
+      <Name>DomainDrivenDesign.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

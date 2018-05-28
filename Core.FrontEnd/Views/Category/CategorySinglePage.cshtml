@@ -1,0 +1,29 @@
+﻿@using Core.FrontEnd.Models
+@model Core.FrontEnd.Models.FeCategory
+@{
+    ViewBag.Title = Model.Title;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var news = Model.News.FirstOrDefault() ?? new FeCategory.NewsItem();
+}
+
+@section MetaSEO
+{
+    <meta content="@news.SeoDescription" name="description" />
+    <meta content="@news.SeoKeywords" name="keywords" />
+}
+@if (!string.IsNullOrEmpty(news.Title))
+{
+    <h2>@news.Title</h2>
+}
+@if (!string.IsNullOrEmpty(news.ShortDescription))
+{
+    <h2>@news.ShortDescription</h2>
+}
+@if (!string.IsNullOrEmpty(news.UrlImage))
+{
+    <div><img src="@news.UrlImage" /></div>
+}
+
+<div>
+    @Html.Raw(news.Description)
+</div>

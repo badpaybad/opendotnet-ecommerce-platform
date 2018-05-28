@@ -1,0 +1,291 @@
+﻿@using DomainDrivenDesign.Core.Implements.Models
+@model Core.FrontEnd.Areas.Admin.Models.RoleListAdminPage
+@{
+    ViewBag.Title = "Role & Right Management";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Role & Right Management</h2>
+<div class="row">
+    <div class="col-md-5">
+
+        <div class="portlet light bordered">
+            <div class="portlet-title">
+                <div class="caption">Roles</div>
+            </div>
+            <div class="portlet-body form">
+                <div class="form-group">
+                    <table class="icheck-list system-role table table-striped table-bordered table-advance table-hover">
+                        <tr style="font-weight: bold">
+                            <td>Title</td>
+                            <td></td>
+                        </tr>
+
+                        @foreach (var role in Model.Roles)
+                        {
+                            <tr>
+                                <td>
+                                    <label>
+                                        <input type="radio" name="role" class="icheck" id="role-@role.Id"
+                                               indeterminate="true"
+                                               data-id='@role.Id'>
+                                        <input id="txtRoleName-@role.Id" value="@role.Title" />
+
+                                    </label>
+                                </td>
+                                <td>
+                                    
+                                    <a href="javascript:" onclick="UpdateRole('@role.Id')">Update</a>
+                                    |
+                                    <a href="javascript:" onclick="DeleteRole('@role.Id')">Delete</a>
+
+                                </td>
+                            </tr>
+                        }
+                        <tr>
+                            <td><input id="txtNewRoleTitle" value="" class="form-control" /></td>
+                            <td>
+                                <a href="javascript:" onclick="CreateRole()">Save new</a>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="form-actions">
+               <a href="/Admin/AdminRole/RefreshRight"> Reload rights</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-7">
+
+        <div class="portlet light bordered">
+            <div class="portlet-title">
+                <div class="caption">Right</div>
+            </div>
+            <div class="portlet-body form">
+                <div class="form-group">
+                    <table class="icheck-list system-right table table-striped table-bordered table-advance table-hover">
+                        <tr style="font-weight: bold">
+                            <td>
+                                <label>
+                                    <input type="checkbox" data-id='-1'
+                                           class="icheck" id="chkRightAll" title="check all">
+                                </label>
+                            </td>
+                            <td>Title</td>
+                        </tr>
+
+                        @foreach (var right in Model.Rights)
+                        {
+                            <tr>
+                                <td>
+                                    <input type="checkbox" data-id='@right.Id' class="icheck"
+                                           id="right-@right.Id">
+                                </td>
+                                <td>
+                                    <div>
+                                        @right.Title
+                                    </div>
+                                    <input type="text" value="@right.Description" id="rightId-@right.Id" placeholder="right description"/>
+                                    <a href="javascript:" onclick="UpdateRight('@right.Id')">Update</a>
+                                </td>
+
+                            </tr>
+
+                        }
+
+                    </table>
+                </div>
+            </div>
+            <div class="form-actions">
+                <input class="btn btn-default" id="btnAssginRight" type="button" value="Assign checked rights"
+                       onclick="AssignRightsToRole()">
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        $('.system-role input').on('ifChecked', function(event) {
+
+            FindRightByRole($(this).attr('data-id'));
+
+        });
+
+        $('.system-right input').on('ifChecked', function(event) {
+            var rid = $(this).attr('data-id');
+
+            if (parseInt(rid) < 0) {
+                $(".system-right input").each(function() {
+                    var rId = $(this).attr('data-id');
+                    $(this).iCheck('check');
+                });
+            }
+
+        });
+
+        $('.system-right input').on('ifUnchecked', function(event) {
+            var rid = $(this).attr('data-id');
+
+            if (parseInt(rid) < 0) {
+                $(".system-right input").each(function() {
+                    var rId = $(this).attr('data-id');
+                    $(this).iCheck('uncheck');
+                });
+            }
+
+        });
+
+        function FindRightByRole(roleId) {
+            $.getJSON('/Admin/AdminRole/FindRightByRole',
+                { roleId: roleId },
+                function(data) {
+                    if (data.Ok) {
+                        $('.system-right input').each(function() {
+                            var chk = $(this);
+                            chk.iCheck('uncheck');
+                            for (var i = 0; i < data.Data.length; i++) {
+
+                                if (chk.attr('data-id') == data.Data[i].Id) {
+                                    chk.iCheck('check');
+                                    break;
+                                }
+                            }
+                        });
+
+                    }
+                });
+        }
+
+        function AssignRightsToRole() {
+            var rights = [];
+            var roles = $(".system-role input:checked");
+            if (!roles || roles.length <= 0) {
+                toastr.warning("No role selected", "No role selected");
+                return;
+            }
+
+            var roleId = $(roles[0]).attr('data-id');
+
+            $(".system-right input:checked").each(function() {
+                var rId = $(this).attr('data-id');
+                rights.push(rId);
+            });
+
+            $.post('/Admin/AdminRole/AssignRightsToRole',
+                    { roleId: roleId, rightIds: rights })
+                .done(function(data) {
+                    if (data.Ok) {
+                        toastr.success("Update success", "Update success");
+                    }
+                }).fail(function () {
+                    bootbox.alert({
+                        message: "Can not make request, check your internet and try to reload page",
+                        backdrop: true
+                    });
+                });
+
+        }
+
+        function CreateRole() {
+            bootbox.confirm('Do you want to CREATE NEW Role?', function (result) {
+                if (!result) return;
+
+               $.post('/Admin/AdminRole/CreateRole',
+                        {
+                            title: $('#txtNewRoleTitle').val()
+                        })
+                    .done(function (data) {
+                        if (data.Ok) {
+                            toastr.success(data.Message);
+                            window.location = '/Admin/AdminRole/Index';
+                        } else {
+                            toastr.error(data.Message);
+                        }
+                    }).fail(function () {
+                        bootbox.alert({
+                            message: "Can not make request, check your internet and try to reload page",
+                            backdrop: true
+                        });
+                    });
+            });
+        }
+
+        function UpdateRole(id) {
+            bootbox.confirm('Do you want to UPDATE Role title?', function (result) {
+                if (!result) return;
+
+                $.post('/Admin/AdminRole/UpdateRole',
+                    {
+                            id:id,
+                            title: $('#txtRoleName-'+id).val()
+                        })
+                    .done(function (data) {
+                        if (data.Ok) {
+                            toastr.success(data.Message);
+                            
+                        } else {
+                            toastr.error(data.Message);
+                        }
+                    }).fail(function () {
+                        bootbox.alert({
+                            message: "Can not make request, check your internet and try to reload page",
+                            backdrop: true
+                        });
+                    });
+            });
+        }
+
+        function DeleteRole(id) {
+            bootbox.confirm('Do you want to DELETE Role?', function (result) {
+                if (!result) return;
+
+                $.post('/Admin/AdminRole/DeleteRole',
+                        {
+                            id: id
+                        })
+                    .done(function (data) {
+                        if (data.Ok) {
+                            toastr.success(data.Message);
+                            window.location = '/Admin/AdminRole/Index';
+                        } else {
+                            toastr.error(data.Message);
+                        }
+                    }).fail(function () {
+                        bootbox.alert({
+                            message: "Can not make request, check your internet and try to reload page",
+                            backdrop: true
+                        });
+                    });
+            });
+        }
+
+        function UpdateRight(id) {
+            bootbox.confirm('Do you want to UPDATE Right description?', function (result) {
+                if (!result) return;
+
+                $.post('/Admin/AdminRole/UpdateRight',
+                        {
+                            id:id,
+                            description: $('#rightId-'+id).val()
+                        })
+                    .done(function (data) {
+                        if (data.Ok) {
+                            toastr.success(data.Message);
+                            
+                        } else {
+                            toastr.error(data.Message);
+                        }
+                    }).fail(function () {
+                        bootbox.alert({
+                            message: "Can not make request, check your internet and try to reload page",
+                            backdrop: true
+                        });
+                    });
+            });
+        }
+    </script>
+}

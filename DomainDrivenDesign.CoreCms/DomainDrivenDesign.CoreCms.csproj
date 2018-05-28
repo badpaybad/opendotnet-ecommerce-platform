@@ -1,0 +1,140 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{036F8EC7-54CC-4EED-946F-6EB8BE23E61C}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>DomainDrivenDesign.CoreCms</RootNamespace>
+    <AssemblyName>DomainDrivenDesign.CoreCms</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="MySql.Data, Version=6.10.6.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <HintPath>..\packages\MySql.Data.6.10.6\lib\net452\MySql.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="MySql.Data.Entity.EF6, Version=6.9.11.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <HintPath>..\packages\MySql.Data.Entity.6.9.11\lib\net45\MySql.Data.Entity.EF6.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Configuration.Install" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Drawing.Design" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Runtime" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Transactions" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Commands\AddNewsToCategory.cs" />
+    <Compile Include="Commands\CategoryComandHandles.cs" />
+    <Compile Include="Commands\ChangeCategoryDisplayOrder.cs" />
+    <Compile Include="Commands\ChangeNewsToCategories.cs" />
+    <Compile Include="Commands\ChangeRootCategory.cs" />
+    <Compile Include="Commands\CreateCategory.cs" />
+    <Compile Include="Commands\CreateHomePageSection.cs" />
+    <Compile Include="Commands\CreateNews.cs" />
+    <Compile Include="Commands\DeleteCategory.cs" />
+    <Compile Include="Commands\DeleteHomPageSection.cs" />
+    <Compile Include="Commands\DeleteNews.cs" />
+    <Compile Include="Commands\ContactUsInfoCommandHandles.cs" />
+    <Compile Include="Commands\HomePageSettingsCommandHandles.cs" />
+    <Compile Include="Commands\LanguageCommandHandles.cs" />
+    <Compile Include="Commands\NewsCommandHandles.cs" />
+    <Compile Include="Commands\PublishHomePageSection.cs" />
+    <Compile Include="Commands\PublishNews.cs" />
+    <Compile Include="Commands\RemoveNewsFromCategory.cs" />
+    <Compile Include="Commands\SendContactUsInfo.cs" />
+    <Compile Include="Commands\UpdateCategory.cs" />
+    <Compile Include="Commands\UpdateHomePageSection.cs" />
+    <Compile Include="Commands\UpdateNews.cs" />
+    <Compile Include="Commands\UpdateNewsForSeo.cs" />
+    <Compile Include="DomainCategory.cs" />
+    <Compile Include="DomainContactUsInfo.cs" />
+    <Compile Include="DomainLanguage.cs" />
+    <Compile Include="Ef\Category.cs" />
+    <Compile Include="Ef\CoreCmsDbContext.cs" />
+    <Compile Include="Ef\HomePageSection.cs" />
+    <Compile Include="Ef\News.cs" />
+    <Compile Include="Events\CategoryChangedDisplayOrder.cs" />
+    <Compile Include="Events\CategoryDeleted.cs" />
+    <Compile Include="Events\CategoryEventHandles.cs" />
+    <Compile Include="Events\CategoryRootChanged.cs" />
+    <Compile Include="Events\CategoryCreated.cs" />
+    <Compile Include="Events\CategoryUpdated.cs" />
+    <Compile Include="DomainNews.cs" />
+    <Compile Include="Events\NewsCreated.cs" />
+    <Compile Include="Events\NewsAddedToCategory.cs" />
+    <Compile Include="Events\NewsDeleted.cs" />
+    <Compile Include="Events\NewsEventHandles.cs" />
+    <Compile Include="Events\NewsPublished.cs" />
+    <Compile Include="Events\NewsRemovedFromCategory.cs" />
+    <Compile Include="Events\NewsUpdated.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\NewsSearchServices.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DomainDrivenDesign.CorePermission\DomainDrivenDesign.CorePermission.csproj">
+      <Project>{aa483e55-fe1a-4473-8e4e-38cd69cd319f}</Project>
+      <Name>DomainDrivenDesign.CorePermission</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DomainDrivenDesign.Core\DomainDrivenDesign.Core.csproj">
+      <Project>{94db03a1-6cc1-4c92-8742-de9202416323}</Project>
+      <Name>DomainDrivenDesign.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="docs\MySqlCommand.xml" />
+    <Content Include="docs\MySqlCommandBuilder.xml" />
+    <Content Include="docs\MySqlConnection.xml" />
+    <Content Include="docs\MySqlConnectionStringBuilder.xml" />
+    <Content Include="docs\MySqlDataAdapter.xml" />
+    <Content Include="docs\MySqlDataReader.xml" />
+    <Content Include="docs\MySqlException.xml" />
+    <Content Include="docs\MySqlHelper.xml" />
+    <Content Include="docs\MySqlParameter.xml" />
+    <Content Include="docs\MySqlParameterCollection.xml" />
+    <Content Include="docs\MySqlTransaction.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

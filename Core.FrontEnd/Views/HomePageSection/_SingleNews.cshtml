@@ -1,0 +1,17 @@
+﻿@model Core.FrontEnd.Models.FeHomePage.Section
+@{
+    Layout = null;
+    var firstNews = Model.Data.FirstNews;
+}
+
+<div class="row">
+    <div class="col-lg-6">
+        <h2>@Model.Title</h2>
+        @Html.Raw(firstNews.Description)
+    </div>
+    <div class="col-lg-6">
+        <img class="img-fluid rounded" src="@firstNews.UrlImage" alt="">
+    </div>
+</div>
+
+<hr>

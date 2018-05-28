@@ -1,0 +1,69 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+   
+    <script src="/assets/global/plugins/jquery.min.js"></script>
+    <script src="/assets/tinymce/jquery.tinymce.min.js"></script>
+</head>
+<body>
+    <a href="https://developers.google.com/maps/documentation/embed/start" target="_blank">Click to open new window build map and copy iframe code</a>
+<br />
+<textarea id="htmlArea" rows="16" style="width:100%"></textarea>
+    
+<button onclick="setContent()">Ok</button>
+<button onclick="removeContent()">Remove</button>
+<script>
+    var tinymce = window.parent.tinyMCE;
+    if (!tinymce || tinymce == 'undefined') {
+        tinymce = window.parent.tinymce;
+    }
+    
+    var selectedNode = tinymce.activeEditor.selection.getNode();
+
+    if (selectedNode != null && selectedNode != 'undefined') {
+        jQuery('#htmlArea').html(selectedNode.innerHTML);
+    } else {
+        jQuery('#htmlArea').html('');
+    }
+    tinymce.activeEditor.selection.select();
+    var setContent = function () {
+        var html = jQuery('#htmlArea').html();
+      
+        //tinymce.activeEditor.selection.setContent(html, { format: 'html' });
+        var iframeNode = tinymce.activeEditor.dom.create('iframe',
+            { src: '' });
+        iframeNode.innerHTML = html;
+
+        tinymce.activeEditor.selection.setNode(iframeNode);
+       // tinymce.activeEditor.setContent(html, { format: 'html' });
+    }
+
+    var removeContent = function () {
+
+        tinymce.activeEditor.selection.setContent('');
+        jQuery('#htmlArea').html('');
+    }
+
+
+
+</script>
+<!--<script>
+    function initMap() {
+        var uluru = {lat: -25.363, lng: 131.044};
+        var map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 4,
+            center: uluru
+        });
+        var marker = new google.maps.Marker({
+            position: uluru,
+            map: map
+        });
+    }
+</script>
+<script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap">
+</script>-->
+</body>
+</html>

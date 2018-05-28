@@ -1,0 +1,11 @@
+﻿@model Core.FrontEnd.Models.FeShoppingCartPage.Item
+
+<div class="input-group shopping-cart-button-remove">
+    <input type="text" id="productRemQuantity-@Model.ProductId"
+           class="form-control shopping-cart-quantity" placeholder="quantity" value="1">
+    <span class="input-group-btn">
+        <button class="btn btn-secondary " type="button"
+                onclick="ShoppingCart.removeProduct('@Model.ProductId',$('#productRemQuantity-@Model.ProductId').val(),'@Model.Title')" 
+        >Remove</button>
+    </span>
+</div>

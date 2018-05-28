@@ -1,0 +1,22 @@
+﻿@using DomainDrivenDesign.Core
+@model Core.FrontEnd.Plugins.PaymentMethodInternational.OnepayIntResult
+
+@{
+    ViewBag.Title = "Payment result";
+    Layout = "/Views/Shared/_Layout.cshtml";
+    var lang = EngineeCurrentContext.GetCurrentLanguage();
+}
+
+<h2>Payment result</h2>
+<h3>@Model.Status.ToString()</h3>
+<h5>
+    Order Code: @Model.OrderCode
+    <br />
+    Amount: @(Model.Amount * lang.CurrencyExchangeRate)@lang.CurrencyCode
+</h5>
+@if (!Model.Success)
+{
+    <h6>
+        @Html.Raw(Model.Message)
+    </h6>
+}

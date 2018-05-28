@@ -1,0 +1,35 @@
+﻿@using Core.FrontEnd.Models
+@using DomainDrivenDesign.Core
+@model Core.FrontEnd.Models.FeCategory
+@{
+    ViewBag.Title = Model.Title;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var product = Model.FirstProduct;
+    var exchangeRate = EngineeCurrentContext.GetCurrencyExchangeRate();
+}
+
+@section MetaSEO
+{
+    <meta content="@Model.SeoDescription" name="description" />
+    <meta content="@Model.SeoKeywords" name="keywords" />
+}
+
+@if (!string.IsNullOrEmpty(product.Title))
+{
+    <h2>[@product.ProductCode] @product.Title (@(product.Price*exchangeRate) @EngineeCurrentContext.GetCurrencyCode())</h2>
+}
+<div>
+    @Html.Partial("_AddToShoppingCart", new FeShoppingCartPage.Item { ProductId = product.Id, Title = product.Title , Quantity = 1})
+</div>
+@if (!string.IsNullOrEmpty(product.ShortDescription))
+{
+    <h2>@product.ShortDescription</h2>
+}
+@if (!string.IsNullOrEmpty(product.UrlImage))
+{
+    <div><img src="@product.UrlImage" /></div>
+}
+
+<div>
+    @Html.Raw(product.Description)
+</div>

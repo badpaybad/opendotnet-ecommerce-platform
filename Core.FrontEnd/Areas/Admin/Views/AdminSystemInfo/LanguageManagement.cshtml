@@ -1,0 +1,238 @@
+﻿@using DomainDrivenDesign.Core
+@model dynamic
+
+@{
+    ViewBag.Title = "Language management";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Language management</h2>
+<div class="row">
+    <div class="col-md-7">
+        <a href="javascript:" onclick="AdminLanguagePage.create()">Create new</a>
+        <table id="tblView"></table>
+    </div>
+    <div class="col-md-5">
+        <table>
+            <tr>
+                <td>Title</td>
+                <td><input id="title" placeholder="title" /></td>
+            </tr>
+            <tr>
+                <td>Code</td>
+                <td><input id="code" placeholder="code" /></td>
+            </tr>
+            <tr>
+                <td>Currency Code</td>
+                <td><input id="currencyCode" placeholder="currency code" /></td>
+            </tr>
+            <tr>
+                <td>Currency ExchangeRate
+                    <br />
+                    Calculate with default (USD). eg: 1USD =22000VND thus exchange rate of VND is 22000</td>
+                <td>
+                    <input id="currencyExchangeRate" placeholder="currency exchage rate" value="1" />
+                  
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    <button id="btnSaveNew" onclick="AdminLanguagePage.save(true)"
+                            style="display: none">
+                        Save new
+                    </button>
+                </td>
+                <td>
+                    <button id="btnSave" onclick="AdminLanguagePage.save(false)"
+                            style="display: none">
+                        Save
+                    </button>
+                  
+                </td>
+            </tr>
+
+        </table>
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        AdminLanguagePage = {
+            _selectedId: null,
+            _defaultId: '@EngineeCurrentContext.DefaultLanguageId',
+            init: function() {
+                AdminLanguagePage.list();
+            },
+            save: function(isCreate) {
+                var msgtitle = 'Do you want to CREATE NEW?';
+                if (!isCreate) {
+                    msgtitle = 'Do you want to UPDATE?';
+                }
+
+                bootbox.confirm(msgtitle,
+                    function(result) {
+                        if (!result) return;
+                        $.post('/Admin/AdminSystemInfo/SaveLanguage',
+                                {
+                                    id: AdminLanguagePage._selectedId,
+                                    title: $('#title').val(),
+                                    code: $('#code').val(),
+                                    currencyCode: $('#currencyCode').val(),
+                                    currencyExchangeRate: $('#currencyExchangeRate').val()
+                                })
+                            .done(function(data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                    AdminLanguagePage.refresh();
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function() {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+
+                    });
+            },
+            create: function() {
+                AdminLanguagePage._selectedId = '@Guid.Empty';
+                $('#title').val('');
+                $('#code').val('');
+                $('#currencyCode').val('');
+                $('#currencyExchangeRate').val('1');
+                $('#btnSaveNew').show();
+                $('#btnSave').hide();
+                $('#btnDelete').hide();
+            },
+            edit: function(id, title, code, currencyCode, currencyExchangeRate) {
+                AdminLanguagePage._selectedId = id;
+                $('#title').val(title);
+                $('#code').val(code);
+                $('#currencyCode').val(currencyCode);
+                $('#currencyExchangeRate').val(currencyExchangeRate);
+                $('#btnSaveNew').hide();
+                $('#btnSave').show();
+                $('#btnDelete').show();
+            },
+            delete: function(id) {
+                bootbox.confirm('Do you want to DELETE?',
+                    function(result) {
+                        if (!result) return;
+
+                        $.post('/Admin/AdminSystemInfo/DeleteLanguage',
+                                {
+                                    id: id
+                                })
+                            .done(function(data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                    AdminLanguagePage.refresh();
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function() {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+                    });
+            },
+            list: function() {
+                $('#tblView').bootstrapTable({
+                    idField: 'Id',
+                    //data: AdminUser.arrayCheckedIds,
+                    method: 'post',
+                    url: '/Admin/AdminSystemInfo/ListLanguage?__=' + (new Date().getTime()),
+                    sidePagination: 'server',
+                    pagination: true,
+                    showToggle: false,
+                    minimumCountColumns: 1,
+                    pageSize: 10,
+                    pageList: [10, 20, 50, 100, 200],
+                    showColumns: false,
+                    showRefresh: false,
+                    sortName: 'Id',
+                    sortOrder: 'desc',
+                    queryParams: function(p) {
+                        return {
+                            sortField: p.sort,
+                            orderBy: p.order,
+                            take: p.limit,
+                            skip: p.offset
+                        };
+                    },
+                    columns: [
+                        {
+                            field: 'Title',
+                            title: 'Title',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function(value, row) {
+                                return value + (row.Id == AdminLanguagePage._defaultId ? ' (default)' : '');
+                            }
+                        }, {
+                            field: 'Code',
+                            title: 'Code',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function(value, row) {
+                                return value;
+                            }
+                        }, {
+                            field: 'CurrencyCode',
+                            title: 'Currency Code',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function(value, row) {
+                                return value;
+                            }
+                        }, {
+                            field: 'CurrencyExchangeRate',
+                            title: 'Currency Exchange Rate',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function(value, row) {
+                                return value;
+                            }
+                        }, {
+                            field: 'Id',
+                            title: '',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function(value, row) {
+                                var temp = '<a href="javascript:" onclick="AdminLanguagePage.edit(\'' +
+                                    row.Id +
+                                    '\',\'' +
+                                    row.Title +
+                                    '\'' +
+                                    ',\'' +
+                                    row.Code +
+                                    '\',\'' +
+                                    row.CurrencyCode +
+                                    '\',\'' +
+                                    row.CurrencyExchangeRate +
+                                    '\')">Edit</a>';
+                                if (row.Id != AdminLanguagePage._defaultId) {
+                                    temp += ' | <a href="javascript:" onclick="AdminLanguagePage.delete(\'' +
+                                        row.Id +
+                                        '\')">Delete</a>';
+                                }
+                                return temp;
+                            }
+                        }
+                    ]
+                });
+            },
+            refresh: function() {
+                //AdminLanguagePage._selectedId = null;
+                $('#tblView').bootstrapTable('refresh');
+            }
+        }
+        AdminLanguagePage.init();
+    </script>
+}

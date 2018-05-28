@@ -1,0 +1,361 @@
+﻿@using DomainDrivenDesign.Core
+@model Core.FrontEnd.Areas.Admin.Models.CategoryAdminPage
+@{
+    ViewBag.Title = "Category management";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Category management</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <div>Drag and drop to move category inside other or root</div>
+        <div id="admin-category-tree" class="sidebar-category-tree"></div>
+    </div>
+    <div class="col-md-6">
+        <div class="portlet light bordered">
+            <div class="portlet-title">
+                <div class="caption">
+                    Category
+                    <div class="caption-desc font-grey-cascade">
+                        Click root to show button Save new, or click to node to show edit
+                    </div>
+                </div>
+                <div class="actions">
+                </div>
+            </div>
+            <div class="portlet-body form">
+
+                <div class="form-group">
+                    <label class="control-label">Title</label>
+                    <input id="title" type="text" placeholder="category title" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Seo keywords</label>
+                    <input id="seoKeywords" type="text" placeholder="seo keywords" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Seo description</label>
+                    <input id="seoDescription" type="text" placeholder="seo description" class="form-control">
+                </div>
+                <div class="form-group icheck-list">
+
+                    <label class="control-label" for="showInFrontEnd">
+                        <input id="showInFrontEnd" type="checkbox" class="icheck">
+                        Show in frontend
+                    </label>
+
+                </div>
+                <div class="form-group icheck-list">
+                    <label class="control-label" for="isSinglePage">
+                        <input id="isSinglePage" type="checkbox" class="icheck">
+                        Is single page
+                    </label>
+
+                </div>
+
+                <div class="form-group">
+                    <div>
+                        <label class="control-label">Tempalte display in Fe (FrontEnd )</label>
+                        <div class="icheck-list category-type-radio">
+                            @foreach (var t in Model.ListCategoryType)
+                            { 
+                                <label class="control-label" for="radCategoryType-@t.Key">
+                                <input name="categorytype" id="radCategoryType-@t.Key" class="icheck"
+                                       value="@t.Key" data-id="@t.Key"
+                                       type="radio" /> @t.Value
+                                </label>
+                            }
+                        </div>
+                    </div>
+                    <div class="category-choose-template">
+                        <ul class="nav navbar-nav">
+                            <li class="dropdown" id="categoryType-@((short)Enums.CategoryType.News)">
+                                <a class="nav-link dropdown-toggle" id="selectCvn" data-toggle="dropdown"
+                                   aria-haspopup="true" aria-expanded="false">
+                                    <span>Choose template</span>
+                                    <i class="fa fa-angle-down"></i>
+                                </a>
+
+                                <div class="dropdown-menu" aria-labelledby="selectCvn">
+                                    <a class="dropdown-item" href="javascript:" onclick="$('#categoryViewName').val('')">Default</a>
+                                    @foreach (var cvn in Model.ListCategoryViewName)
+                                    {
+                                        <a class="dropdown-item" href="javascript:"
+                                           onclick="$('#categoryViewName').val('@cvn')">@cvn</a>
+                                    }
+                                </div>
+
+
+                            </li>
+
+                            <li class="dropdown" id="categoryType-@((short)Enums.CategoryType.Product)" style="display: none">
+                                <a class="nav-link dropdown-toggle" id="selectCpvn" data-toggle="dropdown"
+                                   aria-haspopup="true" aria-expanded="false">
+                                    <span>Choose template</span>
+                                    <i class="fa fa-angle-down"></i>
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="selectCpvn">
+                                    <a class="dropdown-item" href="javascript:" onclick="$('#categoryViewName').val('')">Default</a>
+                                    @foreach (var cvn in Model.ListCategoryProductViewName)
+                                    {
+                                    <a class="dropdown-item" href="javascript:"
+                                       onclick="$('#categoryViewName').val('@cvn')">@cvn</a>
+                                    }
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <input id="categoryViewName" type="text" placeholder="category view name" class="form-control">
+                </div>
+
+                <input id="id" type="hidden" value="@Guid.Empty" />
+
+            </div>
+            <div class="form-actions">
+
+                <input class="btn btn-default" id="btnCreate" type="button" value="Save new"
+                       style="display:none"
+                       onclick="CategoryAdmin.create()">
+
+                <input class="btn btn-default" id="btnSave" type="button" value="Save"
+                       style="display:none"
+                       onclick="CategoryAdmin.save()">
+
+                <input class="btn btn-default" id="btnDelete" type="button" value="Delete"
+                       style="display:none"
+                       onclick="CategoryAdmin.delete()">
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        var CategoryAdmin = {
+            _$tblView: null,
+            _guidEmpty: '@Guid.Empty.ToString()',
+            _tree: null,
+
+            loadTree: function() {
+                CategoryAdmin._tree = CategoryAdmin._$tblView.on('changed.jstree',
+                        function(e, data) {
+                            var i, j, r = [];
+                            for (i = 0, j = data.selected.length; i < j; i++) {
+                                r.push(data.instance.get_node(data.selected[i]).id);
+                            }
+                            if (r.length > 0) {
+                                CategoryAdmin.selectedNode(r[0]);
+                            }
+
+                        })
+                    .on('move_node.jstree',
+                        function(e, data) {
+                            var parentId = data.parent;
+                            if (parentId == '#') {
+                                parentId = CategoryAdmin._guidEmpty;
+                            }
+                            CategoryAdmin.changeRoot(data.node.id, data.parent, data.position);
+                        })
+                    .jstree({
+                        "core": {
+                            "themes": {
+                                "responsive": false
+                            },
+                            "check_callback": true,
+                            'data': {
+                                'url': function(node) {
+                                    return '/Admin/AdminCategory/CategoryTree';
+                                },
+                                'data': function(node) {
+                                    return { 'id': node.id };
+                                }
+                            }
+                        },
+                        "types": {
+                            "default": {
+                                "icon": "fa fa-folder icon-state-warning icon-lg"
+                            },
+                            "root": {
+                                "icon": "fa fa-folder icon-state-warning icon-lg"
+                            },
+                            "file": {
+                                "icon": "fa fa-file icon-state-warning icon-lg"
+                            }
+                        },
+                        "plugins": [ "types", "dnd"]
+                    });
+            },
+            changeRoot: function(id, toParentId, displayOrder) {
+                $.post('/Admin/AdminCategory/ChangeRoot',
+                        {
+                            id: id,
+                            parentId: toParentId,
+                            displayOrder: displayOrder
+                        })
+                    .done(function(data) {
+                        if (data.Ok) {
+                            toastr.success(data.Message);
+                            CategoryAdmin.refresh();
+                        } else {
+                            toastr.error(data.Message);
+                        }
+                    }).fail(function() {
+                        bootbox.alert({
+                            message: "Can not make request, check your internet and try to reload page",
+                            backdrop: true
+                        });
+                    });
+            },
+            selectedNode: function(id) {
+                if (id == CategoryAdmin._guidEmpty) {
+                    toastr.success('Input to add new');
+                    $('#btnCreate').show();
+                    $('#btnDelete').hide();
+                    $('#btnSave').hide();
+                    $('#showInFrontEnd').iCheck('uncheck');
+                    $('#isSinglePage').iCheck('uncheck');
+                    $('#id').val(CategoryAdmin._guidEmpty);
+                    $('#title').val('');
+                    $('#seoKeywords').val('');
+                    $('#seoDescription').val('');
+                    $('#categoryViewName').val('');
+                    $('#radCategoryType-0').iCheck('check');
+                    return;
+                }
+                $.post('/Admin/AdminCategory/Detail',
+                        {
+                            id: id
+                        })
+                    .done(function(data) {
+                        if (data.Ok) {
+                            $('#btnCreate').hide();
+                            $('#btnDelete').show();
+                            $('#btnSave').show();
+
+                            toastr.success(data.Message);
+                            $('#id').val(data.Data.Id);
+                            $('#title').val(data.Data.Title);
+                            $('#seoKeywords').val(data.Data.SeoKeywords);
+                            $('#seoDescription').val(data.Data.SeoDescription);
+                            $('#categoryViewName').val(data.Data.CategoryViewName);
+
+                            $('#showInFrontEnd').iCheck('uncheck');
+                            $('#isSinglePage').iCheck('uncheck');
+
+                            if (data.Data.IsSinglePage) {
+                                //$('#isSinglePage').attr('checked', 'checked');
+                                //$('#isSinglePage').prop('checked', data.Data.IsSinglePage);
+                                $('#isSinglePage').iCheck('check');
+                            }
+
+                            if (data.Data.ShowInFrontEnd) {
+                                //$('#showInFrontEnd').prop('checked', data.Data.ShowInFrontEnd);
+                                //$('#showInFrontEnd').attr('checked', 'checked');
+                                $('#showInFrontEnd').iCheck('check');
+                            }
+
+                            $('#radCategoryType-'+data.Data.Type).iCheck('check');
+
+                        } else {
+                            toastr.error(data.Message);
+                        }
+                    }).fail(function() {
+                        bootbox.alert({
+                            message: "Can not make request, check your internet and try to reload page",
+                            backdrop: true
+                        });
+                    });
+            },
+            create: function() {
+                CategoryAdmin.save(true);
+            },
+            save: function(isSaveNew) {
+                bootbox.confirm('Do you want to save?',
+                    function(result) {
+
+                        if (!result) return;
+
+                        $.post('/Admin/AdminCategory/Save',
+                                {
+                                    id: $('#id').val(),
+                                    title: $('#title').val(),
+                                    seoKeywords: $('#seoKeywords').val(),
+                                    seoDescription: $('#seoDescription').val(),
+                                    categoryViewName: $('#categoryViewName').val(),
+                                    isSaveNew: isSaveNew,
+                                    isSinglePage: $('#isSinglePage').is(":checked"),
+                                    showInFrontEnd: $('#showInFrontEnd').is(":checked"),
+                                    categoryType: $($(".category-type-radio input:checked")[0]).attr('data-id')
+                                })
+                            .done(function(data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                    CategoryAdmin.refresh();
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function() {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+
+                    });
+            },
+            delete: function() {
+                bootbox.confirm('Do you want to DELETE?',
+                    function(result) {
+
+                        if (!result) return;
+
+                        $.post('/Admin/AdminCategory/Delete',
+                                {
+                                    id: $('#id').val()
+                                })
+                            .done(function(data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                    CategoryAdmin.refresh();
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function() {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+
+                    });
+            },
+            refresh: function() {
+                CategoryAdmin._tree.jstree("refresh");
+                jQuery('#sidebar-category-tree').jstree("refresh");
+            },
+            init: function($tblView) {
+                CategoryAdmin._$tblView = $tblView;
+
+                CategoryAdmin.loadTree();
+
+                $('#radCategoryType-0').iCheck('check');
+
+                $('.category-type-radio input').on('ifChecked', function(event) {
+
+                    $('.category-choose-template .dropdown').each(function () {
+                        $(this).hide();
+                    });
+
+                    var rid = $(this).attr('data-id');
+                    $('#categoryType-' + rid).show();
+
+                });
+            }
+
+        }
+
+        CategoryAdmin.init(jQuery('#admin-category-tree'));
+    </script>
+}

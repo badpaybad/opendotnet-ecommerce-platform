@@ -1,0 +1,209 @@
+﻿@model dynamic
+
+@{
+    ViewBag.Title = "Command worker";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Command worker</h2>
+<div class="row">
+    <div class="col-md-12">
+        <button onclick="CommandWorker.refresh()">Refresh</button>
+        <button id="autoRefresh" onclick="CommandWorker.autoRefresh(30)" data-code="auto" data-counter="30">Auto Refresh in 30 seconds</button>
+        <table id="tblView"></table>
+    </div>
+    <div class="col-md-12">
+        <h4>PingWorker to test</h4>
+        <div>Data wait to process: <span id="dataCount"></span></div>
+        <div>Worker to process: <span id="workerCount"></span></div>
+
+        <div>Ping data:</div>
+        <div><input id="pingData"/>
+        </div>
+        <div>Quantity</div>
+        <div><input id="pingQuantity" value="1"/>
+        </div>
+        <button onclick="CommandWorker.submitPing(false, false, '')">Submit</button>
+        <button onclick="CommandWorker.submitPing(true, false, '')">Reset worker</button>
+        <button onclick="CommandWorker.submitPing(false, true, '')">Add worker</button>
+    </div>
+</div>
+
+
+@section scripts{
+    <script>
+        CommandWorker = {
+            _$tblView: $('#tblView'),
+            init: function() {
+                //CommandWorker.getStatistic('');
+                CommandWorker.initTable();
+            },
+            getStatistic: function(type) {
+                $.post('/Admin/AdminCommandWorker/GetStatistic',
+                        {
+                            type: type
+                        })
+                    .done(function(data) {
+                        if (data.Ok) {
+                            var rid = Util.replace(type, '.', '');
+                            $('#dataCount' + rid).html(data.Data.dataCount);
+                            $('#workerCount' + rid).html(data.Data.workerCount);
+                        } else {
+                            toastr.error(data.Message);
+                        }
+                    }).fail(function() {
+                        bootbox.alert({
+                            message: "Can not make request, check your internet and try to reload page",
+                            backdrop: true
+                        });
+                    });
+
+                setTimeout(function() { CommandWorker.getStatistic(type); }, 1000);
+            },
+            submitPing: function(reset, worker, type) {
+
+                bootbox.confirm('Do you want to do?',
+                    function (result) {
+                        if (!result) return;
+                        
+                        Util.showWaiting();
+                        $.post('/Admin/AdminCommandWorker/AddPingData',
+                                {
+                                    pingData: $('#pingData').val(),
+                                    pingQuantity: $('#pingQuantity').val(),
+                                    reset: reset,
+                                    worker: worker,
+                                    type: type
+                                })
+                            .done(function(data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                                Util.hideWaiting();
+                            }).fail(function() {
+                                Util.hideWaiting();
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+
+                    });
+
+            },
+            initTable: function() {
+                CommandWorker._$tblView.bootstrapTable({
+                    idField: 'Type',
+                    //data: AdminUser.arrayCheckedIds,
+                    method: 'post',
+                    url: '/Admin/AdminCommandWorker/List?__=' + (new Date().getTime()),
+                    sidePagination: 'server',
+                    pagination: true,
+                    showToggle: false,
+                    minimumCountColumns: 1,
+                    pageSize: 10,
+                    pageList: [10, 20, 50, 100, 200],
+                    showColumns: false,
+                    showRefresh: false,
+                    sortName: 'CreatedDate',
+                    sortOrder: 'desc',
+                    queryParams: function(p) {
+                        return {
+                            sortField: p.sort,
+                            orderBy: p.order,
+                            take: p.limit,
+                            skip: p.offset,
+                            keywords: ''
+                        };
+                    },
+                    columns: [
+                        {
+                            field: 'Type',
+                            title: 'Data count',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function(value, row) {
+                                var rid = Util.replace(value, '.', '');
+                                var temp = '<span id="dataCount' + rid + '"></span> ';
+                                return temp;
+                            },
+                            width: 90
+                        },
+                        {
+                            field: 'Type',
+                            title: 'Worker count',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function(value, row) {
+                                var rid = Util.replace(value, '.', '');
+                                var temp = '<span id="workerCount' + rid + '"></span> ';
+                                return temp;
+                            },
+                            width: 90
+                        },
+                        {
+                            field: 'Type',
+                            title: 'Type',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function(value, row) {
+                                var temp = '<div class="detail-list-item" data-code="' +
+                                    value +
+                                    '"  >' +
+                                    value +
+                                    '</div>';
+                                temp += '<a onclick="CommandWorker.submitPing(false, true, \'' +
+                                    value +
+                                    '\')">Add worker</a>';
+                                temp += ' | <a onclick="CommandWorker.submitPing(true, false, \'' +
+                                    value +
+                                    '\')">Reset worker</a>';
+                                return temp;
+                            },
+                            width: 90
+                        }
+                    ],
+
+                    onPostBody: function(data) {
+                        $('.detail-list-item').each(function() {
+                            CommandWorker.getStatistic($(this).attr('data-code'));
+                        });
+
+                    }
+                });
+
+            },
+            refresh: function() {
+                CommandWorker._$tblView.bootstrapTable('refresh');
+            },
+            _autoRefreshInterval: null,
+            autoRefresh: function() {
+                var $btn = $('#autoRefresh');
+                var code = $btn.attr('data-code');
+                var counter = 30;
+
+                if (code == 'stop') {
+                    clearInterval(CommandWorker._autoRefreshInterval);
+                    $btn.attr('data-code', 'auto');
+                    $btn.html('Auto refresh in ' + counter + ' seconds');
+                } else {
+                    $btn.attr('data-code', 'stop');
+                    CommandWorker._autoRefreshInterval = setInterval(function() {
+                            counter--;
+                            $btn.html('Auto refresh in ' + counter + ' seconds');
+                            if (counter <= 0) {
+                                CommandWorker.refresh();
+                                counter = 30;
+                            }
+
+                        },
+                        1000);
+                }
+            }
+        }
+
+        CommandWorker.init();
+    </script>
+}

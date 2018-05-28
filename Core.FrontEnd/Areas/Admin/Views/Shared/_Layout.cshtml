@@ -1,0 +1,275 @@
+﻿@using DomainDrivenDesign.Core
+@using DomainDrivenDesign.Core.Implements.Models
+@using DomainDrivenDesign.CorePermission
+@using Newtonsoft.Json
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[Admin] @ViewBag.Title - core.frontend.ddd</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    @if (IsSectionDefined("MetaSEO"))
+    {
+        @RenderSection("MetaSEO")
+    }
+    else
+    {
+        <meta content="core.frontend.ddd" name="description" />
+        <meta content="core.frontend.ddd" name="keywords" />
+    }
+
+    <link rel="shortcut icon" href="/Content/imgs/favicon.png" />
+
+    <link href="/assets/global/plugins/jquery-ui/jquery-ui.min.css" rel="stylesheet" />
+    @*<link href="http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700&subset=all" rel="stylesheet" type="text/css" />*@
+    <link href="/assets/global/plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/global/plugins/simple-line-icons/simple-line-icons.min.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/global/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/global/plugins/uniform/css/uniform.default.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/global/plugins/bootstrap-switch/css/bootstrap-switch.min.css" rel="stylesheet" type="text/css" />
+
+    <link href="/assets/global/plugins/jstree/dist/themes/default/style.min.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/global/plugins/bootstrap-toastr/toastr.min.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/global/plugins/icheck/skins/all.css" rel="stylesheet" type="text/css" />
+
+    <link href="/assets/global/plugins/bootstrap-daterangepicker/daterangepicker.min.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/global/plugins/bootstrap-datepicker/css/bootstrap-datepicker3.min.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/global/plugins/bootstrap-timepicker/css/bootstrap-timepicker.min.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/global/plugins/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/global/plugins/clockface/css/clockface.css" rel="stylesheet" type="text/css" />
+
+    <link href="/assets/bootstraptable/bootstrap-table.css" rel="stylesheet" />
+
+    <link href="/assets/global/css/components.min.css" rel="stylesheet" id="style_components" type="text/css" />
+    <link href="/assets/global/css/plugins.min.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/layouts/layout/css/layout.min.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/layouts/layout/css/themes/darkblue.min.css" rel="stylesheet" type="text/css" id="style_color" />
+    <link href="/assets/layouts/layout/css/custom.min.css" rel="stylesheet" type="text/css" />
+
+    <link href="/Content/AdminSite.css" rel="stylesheet" />
+    @RenderSection("head", required: false)
+</head>
+<body class="page-header-fixed page-sidebar-closed-hide-logo page-content-white">
+    @Html.Partial("_PageHeader")
+    <div class="page-container">
+        @Html.Partial("_PageSideBar")
+        <div class="page-content-wrapper">
+            <div class="page-content">
+                @*<div class="page-bar">
+                        <ul class="page-breadcrumb">
+                            <li>
+                                <a href="index.html">Home</a>
+                                <i class="fa fa-circle"></i>
+                            </li>
+                            <li>
+                                <span>Page Layouts</span>
+                            </li>
+                        </ul>
+                        <div class="page-toolbar">
+
+                        </div>
+                    </div>
+                    <h3 class="page-title">
+                        Blank Page Layout
+                        <small>blank page layout</small>
+                    </h3>
+                    <div class="note note-info">
+                        <p> A blank page template with a minimal dependency assets to use as a base for any custom page you create </p>
+                    </div>*@
+                @RenderBody()
+            </div>
+        </div>
+        @Html.Partial("_PageQuickSideBar")
+    </div>
+    @Html.Partial("_PageFooter")
+    <div id="modal-waiting"></div>
+
+    @if (UserSessionContext.CurrentUser() != null)
+    {
+        <div id="roxyCustomPanel" style="display: none;" title="Select file">
+            <iframe src="/assets/Roxy_Fileman/index.html?integration=custom"
+                    style="width:100%; height: 100%; min-height: 500px" frameborder="0"></iframe>
+        </div>
+    }
+    <!--[if lt IE 9]>
+            <script src="/assets/global/plugins/respond.min.js"></script>
+            <script src="/assets/global/plugins/excanvas.min.js"></script>
+        <![endif]-->
+    <script src="/assets/global/plugins/jquery.min.js" type="text/javascript"></script>
+    <script src="/assets/global/plugins/jquery-ui/jquery-ui.min.js"></script>
+    <script src="/assets/global/plugins/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+    <script src="/assets/global/plugins/js.cookie.min.js" type="text/javascript"></script>
+    <script src="/assets/global/plugins/bootstrap-hover-dropdown/bootstrap-hover-dropdown.min.js" type="text/javascript"></script>
+    <script src="/assets/global/plugins/jquery-slimscroll/jquery.slimscroll.min.js" type="text/javascript"></script>
+    <script src="/assets/global/plugins/jquery.blockui.min.js" type="text/javascript"></script>
+
+
+    <script src="/assets/global/plugins/uniform/jquery.uniform.min.js" type="text/javascript"></script>
+    <script src="/assets/global/plugins/bootstrap-switch/js/bootstrap-switch.min.js" type="text/javascript"></script>
+
+    <script src="/assets/bootstraptable/bootstrap-table.js"></script>
+
+    <script src="/assets/bootstraptable/bootstrap-table-filter.js"></script>
+
+    <script src="/assets/tinymce/tinymce.min.js"></script>
+
+    @*<script src="/assets/global/plugins/bootstrap-modal/js/bootstrap-modalmanager.js" type="text/javascript"></script>
+        <script src="/assets/global/plugins/bootstrap-modal/js/bootstrap-modal.js" type="text/javascript"></script>*@
+
+    <script src="/assets/global/scripts/app.js" type="text/javascript"></script>
+
+    <script src="/assets/global/plugins/jstree/dist/jstree.min.js" type="text/javascript"></script>
+    <script src="/assets/pages/scripts/ui-tree.js" type="text/javascript"></script>
+
+    <script src="/assets/global/plugins/bootstrap-toastr/toastr.min.js" type="text/javascript"></script>
+    <script src="/assets/global/plugins/icheck/icheck.min.js" type="text/javascript"></script>
+
+    <script src="/assets/global/plugins/moment.min.js" type="text/javascript"></script>
+    <script src="/assets/global/plugins/bootstrap-daterangepicker/daterangepicker.min.js" type="text/javascript"></script>
+    <script src="/assets/global/plugins/bootstrap-datepicker/js/bootstrap-datepicker.min.js" type="text/javascript"></script>
+    <script src="/assets/global/plugins/bootstrap-timepicker/js/bootstrap-timepicker.min.js" type="text/javascript"></script>
+    <script src="/assets/global/plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js" type="text/javascript"></script>
+    <script src="/assets/global/plugins/clockface/js/clockface.js" type="text/javascript"></script>
+
+    <script src="/assets/global/plugins/bootbox/bootbox.min.js" type="text/javascript"></script>
+    <script src="/assets/pages/scripts/ui-bootbox.js" type="text/javascript"></script>
+
+    <script src="/assets/layouts/layout/scripts/layout.min.js" type="text/javascript"></script>
+    <script src="/assets/layouts/layout/scripts/demo.min.js" type="text/javascript"></script>
+    <script src="/assets/layouts/global/scripts/quick-sidebar.min.js" type="text/javascript"></script>
+
+    @*
+        <script src="~/tinymce/jquery.tinymce.min.js"></script>*@
+    <script src="/assets/tinymce/tinymce.init.js"></script>
+    <script src="/Scripts/jquery.signalR-2.2.3.min.js"></script>
+    <script src="/signalr/hubs"></script>
+    <script src="/Scripts/system-notification-hub.js"></script>
+    <script src="~/Scripts/admin-site.js"></script>
+
+    <script>
+    var __siteLangs = [];
+    var __currentLangid = '@EngineeCurrentContext.LanguageId';
+
+    @foreach (var l in EngineeCurrentContext.ListSiteLanguage())
+    {
+        <text>__siteLangs['@l.Id']='@l.Title'</text>
+    }
+
+    App.init(); // init metronic core componets
+
+    PageHeader= {
+        changeLanguage: function (langid,reload) {
+            //$('#site-lang')
+            $('#site-lang-text').text(__siteLangs[langid]);
+
+            Cookies.set("langid", langid);
+            if (reload === true) {
+                window.location.reload(true);
+            }
+        }
+        ,
+        init: function () {
+            var temp = '';
+//            site-lang-ul
+            for (var i in __siteLangs) {
+                temp += '<li><a href="javascript:" onclick="PageHeader.changeLanguage(\''+i+'\',true)">'+__siteLangs[i]+'</a></li>';
+            }
+            $('#site-lang-ul').html(temp);
+
+            PageHeader.changeLanguage(__currentLangid);
+        }
+    }
+
+    PageHeader.init();
+    </script>
+    @{var currentUser = UserSessionContext.CurrentUser();
+        var currentRights = UserSessionContext.CurrentUserRights() ?? new List<Right>();}
+    @if (currentUser != null)
+    {
+        <script>
+            RoxyFileMan = {
+                _senderDomId: null,
+                _receiverDomId: null,
+                openCustomRoxy: function (senderDomId, receiverDomId) {
+                    RoxyFileMan._senderDomId = senderDomId;
+                    RoxyFileMan._receiverDomId = receiverDomId;
+                    ///assets/Roxy_Fileman/index.html?integration=custom
+                    $('#roxyCustomPanel iframe').attr("src", "/assets/Roxy_Fileman/index.html?integration=custom&receiverDomId=" + receiverDomId + '&senderDomId=' + senderDomId);
+                    $('#roxyCustomPanel').dialog({ modal: true, minHeight: 500, minWidth: 500 });
+                },
+                closeCustomRoxy: function () {
+                    RoxyFileMan._senderDomId = null;
+                    RoxyFileMan._receiverDomId = null;
+                    $('#roxyCustomPanel').dialog('close');
+                }
+            }
+        </script>
+        <script>
+            var __userRights = [];
+
+            LeftMenu = {
+                init: function() {
+                    @foreach (var r in currentRights)
+                    {
+                        var kurl = r.KeyName.ToLower();
+                        <text>__userRights['@kurl'] = '@kurl';</text>
+                    }
+                    var lhref = window.location.href.toLowerCase().replace('http://','/').replace('https://','/');
+                    lhref = '/'+ Util.trimChar(lhref, '/')+'/';
+                    $('#left-menu .nav-link').each(function() {
+                        var a = $(this);
+                        var pa = $(a.parent());
+
+                        var ahref = a.attr('href').toLowerCase().replace('/admin/', '/');
+                        ahref = Util.trimChar(ahref, '/');
+
+                        ahref = '/' + ahref + '/';
+                        var r = __userRights[ahref];
+                        var isValidRight = false;
+                        if (ahref.indexOf('/') >= 0 && (r == null || r == 'undefined')) {
+                            if (ahref != '//' && ahref.indexOf('#') <= 0 && ahref.indexOf('javascript') <= 0) {
+                                pa.hide();
+                            }
+                            isValidRight = false;
+                        } else {
+                            isValidRight = true;
+                        }
+                        if (ahref.indexOf('adminvoucher') > 0) {
+                            var xxx = "";
+                        }
+                        if ( ahref != '//' && ahref.indexOf('/#/')<0 && ahref.indexOf('/javascript')<0) {
+                             var ulSubmenu = $(pa.parent());
+                             var lipa = $(ulSubmenu.parent());
+
+                             if (lhref.indexOf(ahref) >= 0) {
+                                 pa.attr("class", "nav-item active");
+                                 if (ulSubmenu.attr('class') == 'sub-menu') {
+                                     if (lipa&& lipa.attr("class") == 'nav-item') {
+                                         lipa.attr("class", "nav-item active");
+                                     }
+                                 }
+                             }
+
+                             if (isValidRight == false && ulSubmenu.attr('class') == 'sub-menu') {
+                                 ulSubmenu.hide();
+                                 if(lipa){
+                                     lipa.hide();
+                                 }
+                                pa.hide();
+                            }
+                        }
+
+                    });
+                }
+            }
+
+            LeftMenu.init();
+
+        </script>
+    }
+
+    @RenderSection("scripts", required: false)
+</body>
+</html>

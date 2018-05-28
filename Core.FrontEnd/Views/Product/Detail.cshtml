@@ -1,0 +1,245 @@
+﻿@using Core.FrontEnd.Models
+@using DomainDrivenDesign.Core
+@using DomainDrivenDesign.CorePermission
+@model Core.FrontEnd.Models.FeProduct
+
+@{
+    ViewBag.Title = Model.Title;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var currentUser = UserSessionContext.CurrentUser();
+    var exchanageRate = EngineeCurrentContext.GetCurrencyExchangeRate();
+    var currencyCode = EngineeCurrentContext.GetCurrencyCode();
+
+}
+@section MetaSEO
+{
+    <meta content="@Model.SeoDescription" name="description" />
+    <meta content="@Model.SeoKeywords" name="keywords" />
+}
+@{
+    long productPrice = (long)(Model.Price * exchanageRate);
+}
+<h2>@Model.Title (@productPrice@currencyCode) </h2>
+
+<div class="row">
+    <div class="col-md-4">
+        <div>
+            <img src="@Model.UrlImage" class="img-fluid rounded" />
+        </div>
+
+        @if (Model.IsCombo)
+        {
+            long totalEach = 0;
+            long savedmoney = 0;
+            <strong>Product(s) in combo</strong>
+            <table class="product-combo">
+                <tr class="head">
+                    <td>Product</td>
+                    <td>Unit price`</td>
+                </tr>
+                @{ var idx = 0;}
+                @foreach (var c in Model.ProductsInCombo)
+                {
+                    idx++;
+                    totalEach += c.Price;
+                    <tr>
+                        <td>@(idx). [@c.ProductCode] @c.Title</td>
+                        <td> @(c.Price * exchanageRate)@currencyCode</td>
+                    </tr>
+                }
+                <tr>
+                    <td>Total:</td>
+                    <td>@(totalEach * exchanageRate)@currencyCode</td>
+                </tr>
+            </table>
+            savedmoney = totalEach - productPrice;
+            <strong>
+                Combo save money for you: @(savedmoney * exchanageRate)@currencyCode<br />
+                Combo price: @productPrice@currencyCode
+
+            </strong>
+        }
+        <div>
+            @Html.Partial("_AddToShoppingCart", new FeShoppingCartPage.Item { ProductId = Model.Id, Title = Model.Title , Quantity=1})
+            
+            @foreach (var pp in Model.Promotions)
+            {
+                <div class="product-promotion" title="Buy @pp.ProductQuantity will saved  @(pp.DiscountValue*exchanageRate)@currencyCode">
+                    @Html.Raw(pp.Description)
+                    @Html.Partial("_AddToShoppingCart", new FeShoppingCartPage.Item {ProductId = Model.Id, Title = Model.Title, Quantity = pp.ProductQuantity})
+                    
+                </div>
+            }
+        </div>
+    </div>
+    <div class="col-md-8">
+        <strong>@Model.ShortDescription</strong>
+
+        @if (Model.Galleries != null && Model.Galleries.Count > 0)
+        {
+            <header>
+                <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
+                    <ol class="carousel-indicators">
+                        @for (var i = 0; i < Model.Galleries.Count; i++)
+                        {
+                        <li data-target="#carouselExampleIndicators" data-slide-to="@i" class="@(i==0?"active":"")"></li>
+                        }
+                    </ol>
+                    <div class="carousel-inner" role="listbox">
+                        @for (var i = 0; i < Model.Galleries.Count; i++)
+                        {
+                            var img = Model.Galleries[i];
+                            <div class="carousel-item @(i==0?"active":"")" style="background-image: url('@img')">
+                                &copy; 2018 &nbsp;
+                            </div>
+                        }
+                    </div>
+                    <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                    <a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </div>
+            </header>
+        }
+    </div>
+</div>
+<div>
+    @Html.Raw(Model.Description)
+</div>
+@if (Model.AllowComment)
+{
+    <div class="row">
+        <div class="col-md-8">
+            @if (currentUser == null)
+            {
+                <div>
+                    Login to leave comment.
+                    <a href="@(UserSessionContext.UrlFrontEndLogin)?url=@HttpUtility.UrlEncode(HttpContext.Current.Request.Url.ToString())">Click here to login</a>
+                </div>
+            }
+            else
+            {
+                <table id="tblComments"></table>
+                <div class="card my-4">
+                    <h5 class="card-header">Leave a Comment:</h5>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <textarea class="form-control" rows="3" id="txtComment" placeholder="your comment"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <input class="form-control" value="@UserSessionContext.CurrentUsername()"
+                                   type="text" id="txtAuthorName" placeholder="your name" />
+                        </div>
+                        <button class="btn btn-primary" onclick="ProductComment.postComment()">Submit</button>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="col-md-4"></div>
+    </div>
+}
+
+@section head
+{
+    @if (Model.AllowComment && currentUser != null)
+    {
+        <link href="/assets/bootstraptable/bootstrap-table.min.css" rel="stylesheet" />
+    }
+}
+@section scripts{
+    @if (Model.AllowComment && currentUser != null)
+    {
+        <script src="/assets/bootstraptable/bootstrap-table.js"></script>
+        <script src="/assets/bootstraptable/bootstrap-table-filter.js"></script>
+        <script>
+            ProductComment= {
+                init:function() {
+                    ProductComment.initTable();
+                }
+                ,
+                postComment: function () {
+                    var data = {
+                        id: '@Model.Id',
+                        comment:$('#txtComment').val(),
+                        authorName: $('#txtAuthorName').val()
+                    };
+                    if (data.comment == '') {
+                        alert('Must input comment');
+                        return;
+                    }
+
+                    var ok=confirm('Do you want to POST COMMENT?');
+                    if (!ok) return;
+
+                    $.post('/ProductSearch/AddComent',
+                            data)
+                        .done(function(data) {
+                            if (data.Ok) {
+                                alert(data.Message);
+                                $('#txtComment').val('');
+                                ProductComment.refresh();
+                            } else {
+                                alert(data.Message);
+                            }
+                        }).fail(function() {
+                            bootbox.alert({
+                                message: "Can not make request, check your internet and try to reload page",
+                                backdrop: true
+                            });
+                        });
+                },
+                refresh: function () {
+                    $('#tblComments').bootstrapTable('refresh');
+                },
+                initTable: function() {
+                    $('#tblComments').bootstrapTable({
+                        idField: 'Id',
+                        //data: AdminUser.arrayCheckedIds,
+                        method: 'post',
+                        url: '/ProductSearch/ListComments?__=' + (new Date().getTime()),
+                        sidePagination: 'server',
+                        pagination: true,
+                        showToggle: false,
+                        minimumCountColumns: 1,
+                        pageSize: 10,
+                        pageList: [10, 20, 50, 100, 200],
+                        showColumns: false,
+                        showRefresh: false,
+                        sortName: 'CreatedDate',
+                        sortOrder: 'desc',
+                        queryParams: function(p) {
+                            return {
+                                productId:'@Model.Id',
+                                sortField: p.sort,
+                                orderBy: p.order,
+                                take: p.limit,
+                                skip: p.offset
+                            };
+                        },
+                        columns: [
+                            {
+                                field: 'Content',
+                                title: 'Comment(s)',
+                                align: 'left',
+                                valign: 'middle',
+                                formatter: function (value, row) {
+                                    var temp = '<div class="media-body">';
+                                    temp += '<h5 class="mt-0">' + row.AuthorName + ' at ' + Util.dateTimeFromJson(row.CreatedDate) + '</h5>';
+                                    temp += row.Content;
+                                    return temp+'</div>';
+                                }
+                            }
+                        ]
+                    });
+
+                }
+            }
+
+            ProductComment.init();
+        </script>
+    }
+}

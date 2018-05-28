@@ -1,0 +1,186 @@
+﻿@model dynamic
+
+@{
+    ViewBag.Title = "User management";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<h2>User management</h2>
+<div>
+    <a href="/Admin/AdminUser/Edit/?id=@(Guid.Empty)">Create new</a>
+</div>
+
+<div class="form-group">
+    <div class="input-group input-group-sm">
+        <input id="txtSearch" value="" class="form-control" placeholder="type keywords to search" />
+
+        <span class="input-group-btn">
+            <button class="btn green" type="button" onclick="UserManagement.refresh()">Search</button>
+        </span>
+    </div>
+
+</div>
+<table id="tblView"></table>
+
+@section scripts
+{
+    <script>
+        UserManagement = {
+            _$tblView: null,
+            __$txtSearch:null,
+            init: function ($tblView, $txtSearch) {
+                UserManagement._$tblView = $tblView;
+                UserManagement._$txtSearch = $txtSearch;
+
+                UserManagement.initTable();
+            },
+            initTable: function () {
+                UserManagement._$tblView.bootstrapTable({
+                    idField: 'Id',
+                    //data: AdminUser.arrayCheckedIds,
+                    method: 'post',
+                    url: '/Admin/AdminUser/List?__=' + (new Date().getTime()),
+                    sidePagination: 'server',
+                    pagination: true,
+                    showToggle: false,
+                    minimumCountColumns: 1,
+                    pageSize: 10,
+                    pageList: [10, 20, 50, 100, 200],
+                    showColumns: false,
+                    showRefresh: false,
+                    sortName: 'CreatedDate',
+                    sortOrder: 'desc',
+                    queryParams: function (p) {
+                        var keywords = '';
+                        if (UserManagement._$txtSearch) {
+                            keywords = UserManagement._$txtSearch.val();
+                        }
+                        return {
+                            sortField: p.sort,
+                            orderBy: p.order,
+                            take: p.limit,
+                            skip: p.offset,
+                            keywords: keywords
+                        };
+                    },
+                    columns: [
+                        {
+                            field: 'Username',
+                            title: 'Username',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value;
+                            }
+                        }, {
+                            field: 'Phone',
+                            title: 'Phone',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value;
+                            }
+                        }, {
+                            field: 'Email',
+                            title: 'Email',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value;
+                            }
+                        }, {
+                            field: 'Actived',
+                            title: 'Actived',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value;
+                            }
+                        }, {
+                            field: 'Deleted',
+                            title: 'Deleted',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value;
+                            }
+                        }, {
+                            field: 'Id',
+                            title: '',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                var temp = '<a href="/Admin/AdminUser/Edit/?id=' +
+                                    row.Id+'">Edit</a>';
+                                temp += ' | <a href="javascript:" onclick="UserManagement.delete(\'' +
+                                    row.Id +
+                                    '\')">Delete</a>';
+                                temp += ' | <a href="javascript:" onclick="UserManagement.active(\'' +
+                                    row.Id +
+                                    '\',true)">Active</a>';
+                                temp += ' | <a href="javascript:" onclick="UserManagement.active(\'' +
+                                    row.Id +
+                                    '\',false)">Deactive</a>';
+                                return temp;
+                            }
+                        }
+                    ]
+                });
+            },
+            delete: function(id) {
+                bootbox.confirm('Do you want to DELETE?', function(result) {
+                    if (!result) return;
+
+                    $.post('/Admin/AdminUser/Delete',
+                            {
+                                id: id
+                            })
+                        .done(function(data) {
+                            if (data.Ok) {
+                                toastr.success(data.Message);
+                                UserManagement._$tblView.bootstrapTable('refresh');
+                            } else {
+                                toastr.error(data.Message);
+                            }
+                        }).fail(function() {
+                            bootbox.alert({
+                                message: "Can not make request, check your internet and try to reload page",
+                                backdrop: true
+                            });
+                        });
+                });
+            },
+            active:function(id,isActive) {
+                bootbox.confirm('Do you want to ' + (isActive?'Active':'Deactive')+'?', function(result) {
+                    if (!result) return;
+
+                    $.post('/Admin/AdminUser/Active',
+                            {
+                                id: id,
+                                isActive:isActive
+                            })
+                        .done(function(data) {
+                            if (data.Ok) {
+                                toastr.success(data.Message);
+                                UserManagement._$tblView.bootstrapTable('refresh');
+                            } else {
+                                toastr.error(data.Message);
+                            }
+                        }).fail(function() {
+                            bootbox.alert({
+                                message: "Can not make request, check your internet and try to reload page",
+                                backdrop: true
+                            });
+                        });
+                });
+            }
+            , 
+            refresh:function() {
+                UserManagement._$tblView.bootstrapTable('refresh');
+            }
+        }
+
+        UserManagement.init($('#tblView'),$('#txtSearch'));
+    </script>
+
+}

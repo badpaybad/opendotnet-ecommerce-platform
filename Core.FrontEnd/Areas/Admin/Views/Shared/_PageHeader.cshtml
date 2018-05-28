@@ -1,0 +1,79 @@
+﻿@using DomainDrivenDesign.Core
+@using DomainDrivenDesign.CorePermission
+<div class="page-header navbar navbar-fixed-top">
+<!-- BEGIN HEADER INNER -->
+<div class="page-header-inner ">
+<!-- BEGIN LOGO -->
+<div class="page-logo">
+    <a href="/Admin">
+        <img src="/Content/imgs/logo-100.png" alt="logo" class="logo-avatar" /> </a>
+  
+    <div class="menu-toggler sidebar-toggler"> </div>
+</div>
+<!-- END LOGO -->
+<!-- BEGIN RESPONSIVE MENU TOGGLER -->
+<a href="javascript:;" class="menu-toggler responsive-toggler" data-toggle="collapse" data-target=".navbar-collapse"> </a>
+<!-- END RESPONSIVE MENU TOGGLER -->
+<!-- BEGIN TOP NAVIGATION MENU -->
+    <div class="top-menu">
+        <ul class="nav navbar-nav pull-right">
+            <li>
+                <a href="/">Goto frontend</a>
+            </li>
+            <li class="dropdown" title="live monitoring">
+                <a href="/Admin/AdminMonitor/Index" class="dropdown-toggle">
+                    <i class="icon-screen-desktop"></i>
+                    <span class="username">Live!</span>
+                </a>
+            </li>
+            <li class="dropdown" title="order wait to process">
+                <a href="/Admin/AdminOrder/Index?status=@((short) Enums.ShoppingCartStatus.OrderConfirmed)" class="dropdown-toggle">
+                    <i class="fa fa-object-group"></i>
+                    (<span class="username" id="orderConfirmedCount"></span>)
+                </a>
+            </li>
+            <li class="dropdown" title="contact message wait to process">
+                <a href="/Admin/AdminSystemInfo/ContactUsInfo" class="dropdown-toggle">
+                    <i class="icon-envelope-letter"></i>
+                    (<span class="username" id="contactMesageTodayCount"></span>)
+                </a>
+            </li>
+            <li class="dropdown">
+                <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown"
+                   data-hover="dropdown" data-close-others="true">
+                    <span class="username"> @UserSessionContext.CurrentUsername() </span>
+                    <i class="fa fa-angle-down"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-default">
+                    <li>
+                        <a href="/Admin/AdminHome/Logout">Logout</a>
+
+                    </li>
+                </ul>
+            </li>
+            <!-- BEGIN USER LOGIN DROPDOWN -->
+            <!-- DOC: Apply "dropdown-dark" class after below "dropdown-extended" to change the dropdown styte -->
+            <li class="dropdown">
+                <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" data-close-others="true">
+                    <span id="site-lang-text" class="username"></span>
+                    <i class="fa fa-angle-down"></i>
+                </a>
+                <ul id="site-lang-ul" class="dropdown-menu dropdown-menu-default"></ul>
+            </li>
+            <!-- END USER LOGIN DROPDOWN -->
+            <!-- BEGIN QUICK SIDEBAR TOGGLER -->
+            <!-- DOC: Apply "dropdown-dark" class after below "dropdown-extended" to change the dropdown styte -->
+            <li class="dropdown dropdown-quick-sidebar-toggler">
+                <a href="javascript:;" class="dropdown-toggle">
+                    <i class="icon-logout"></i>
+                </a>
+            </li>
+            <!-- END QUICK SIDEBAR TOGGLER -->
+        </ul>
+    </div>
+<!-- END TOP NAVIGATION MENU -->
+</div>
+<!-- END HEADER INNER -->
+</div>
+
+<div class="clearfix"> </div>

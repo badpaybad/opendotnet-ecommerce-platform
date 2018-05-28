@@ -1,0 +1,192 @@
+﻿body {
+    padding-top: 0px;
+	overflow-x: hidden;
+}
+.slogan {
+    text-align: left;
+    vert-align: middle;
+}
+#modal-waiting {
+    background: transparent url("./imgs/loading.gif");
+}
+
+.clear-float {
+    clear: both;
+    display: none;
+}
+
+@media (max-width: 767px) {
+    .hidden-xs {
+        display: none !important; } }
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .hidden-sm {
+        display: none !important; } }
+
+.btn-primary {
+    background-color: #8d480a;
+    border-color: #8d480a;
+}
+
+
+.navbar-dark .navbar-nav .nav-link {
+    color: #fff;
+}
+
+.navbar-dark .navbar-nav .nav-link:focus, .navbar-dark .navbar-nav .nav-link:hover {
+    color: #c8974c;
+}
+
+.copa-footer {
+    background-color: #8d480a;
+    padding: 20px;
+    margin-top: 10px;
+}
+.search-top {
+    text-align: right;    
+}
+.copa-head {
+    height: 75px;
+    padding: 0px;
+    background-color: #8d480a;
+    padding-left: 0px;
+    padding-top: 0px;
+    color: #fff0f5 !important;
+}
+
+.copa-head-40 {
+    width: 20%;
+    float: left;
+}
+.copa-head-60 {
+    width: 78.9%;
+    float: left;
+}
+
+.copa-logo-text {
+    font-weight: bold;
+    font-size: 14pt;
+    overflow: hidden;
+}
+
+    .copa-head img {
+        margin: 0px;
+        height: 75px;
+    }
+
+.copa-head a {
+    margin: 0px;
+    padding: 0px;
+    display: inline-block;
+    text-decoration: none;
+    color: #fff0f5 !important;
+}
+.copa-head a:hover {
+   
+    text-decoration: none;
+}
+
+.copa-menu {
+    background-color: #0d1e42;
+}
+
+.copa-mobi-menu-icon {
+    color: #8d480a;
+}
+
+.copa-search-result img{ width: 100%;}
+
+.copa-shopping-cart {
+    color: #8d480a;
+    cursor: pointer;
+}
+.copa-shopping-cart a{
+    
+    cursor: pointer;
+}
+#shopping-cart-mini-quantity {
+    color: #ff0000;
+    padding-left: 3px;
+}
+
+.shopping-cart-quantity {
+    display: inline-block;
+    width: 45px;
+}
+
+.shopping-cart-bound-button-add {
+    display: inline-block;
+    padding-top: 5px;
+}
+
+.shopping-cart-item-img {
+    max-width: 75px;
+}
+
+.carousel-item {
+    background-color: #ccc;
+}
+
+.carousel-indicators li {
+    border: solid 1px #999;
+    padding: 2px;
+}
+.carousel-control-prev-icon {
+    border: solid 1px #999;
+}
+
+.carousel-control-next-icon {
+    border: solid 1px #999;
+}
+
+.product-combo {
+    
+}
+.product-combo td{
+    padding: 2px;
+}
+.product-combo .head{
+    font-style: italic;
+}
+
+.product-promotion {
+    display: inline-block;
+}
+
+.payment-method {
+    padding-bottom: 5px;
+    border: solid 1px #efefef;
+    margin-bottom: 3px;
+}
+.payment-method label {
+    font-weight: bold;
+    display: block;
+    background-color: #efefef;
+    padding: 2px;
+    cursor: pointer;
+}
+.payment-description {
+    padding-left: 10px;
+}
+.shipping-method {
+    padding-bottom: 5px;
+    border: solid 1px #efefef;
+    margin-bottom: 3px;
+}
+
+    .shipping-method label {
+        font-weight: bold;
+        display: block;
+        background-color: #efefef;
+        padding: 2px;
+        cursor: pointer;
+    }
+.shipping-description {
+    padding-left: 10px;
+}
+
+.cart-voucher {
+    padding: 5px;
+    padding-top: 10px;
+    background-color: #efefef;
+}

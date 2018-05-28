@@ -1,0 +1,89 @@
+﻿@model List<DomainDrivenDesign.Core.CacheManager.CacheItem>
+@{
+    ViewBag.Title = "Cache management";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Cache management</h2>
+<div>
+    <a href="javascript:" onclick="clearAll()">Clear All</a>
+    |
+    <a href="javascript:" onclick="clearSelected()">Clear Selected</a>
+</div>
+<table id="tblView">
+    <tr>
+        <td></td><td>Key</td><td>CreatedDate</td><td>ExpiredDate</td>
+    </tr>
+    @foreach (var k in Model)
+    {
+        <tr>
+            <td><input type="checkbox" id="@k.Key" value="@k.Key" /></td>
+            <td>@k.Key</td>
+            <td>@k.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss")</td>
+            <td>@k.ExpiredDate.ToString("yyyy-MM-dd HH:mm:ss")</td>
+        </tr>
+    }
+</table>
+
+@section scripts
+{
+    <script>
+        var clearAll=function()
+        {
+
+            bootbox.confirm('Do you want to CLEAR ALL cache?', function (result) {
+                if (!result) return;
+
+                $.post('/Admin/AdminCache/ClearAll',
+                        {
+                            cmd:clearAll
+                        })
+                    .done(function (data) {
+                        if (data.Ok) {
+                            toastr.success(data.Message);
+                            window.location = '/Admin/AdminCache/Index';
+                        } else {
+                            toastr.error(data.Message);
+                        }
+                    }).fail(function () {
+                        bootbox.alert({
+                            message: "Can not make request, check your internet and try to reload page",
+                            backdrop: true
+                        });
+                    });
+            });
+
+        }
+
+        var clearSelected = function () {
+
+            bootbox.confirm('Do you want to CLEAR SELECTED cache?', function (result) {
+                if (!result) return;
+                var keys = [];
+                $("#tblView input:checked").each(function() {
+                    var rId = $(this).attr('id');
+                    keys.push(rId);
+                });
+
+                $.post('/Admin/AdminCache/ClearKeys',
+                    {
+                        keys: keys
+                    })
+                    .done(function (data) {
+                        if (data.Ok) {
+                            toastr.success(data.Message);
+                            window.location = '/Admin/AdminCache/Index';
+                        } else {
+                            toastr.error(data.Message);
+                        }
+                    }).fail(function () {
+                        bootbox.alert({
+                            message: "Can not make request, check your internet and try to reload page",
+                            backdrop: true
+                        });
+                    });
+            });
+
+        }
+    </script>
+}

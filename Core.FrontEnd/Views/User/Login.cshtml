@@ -1,0 +1,202 @@
+﻿@using DomainDrivenDesign.Core.Utils
+@using DomainDrivenDesign.CorePermission
+@model dynamic
+@{
+    ViewBag.Title = "Login";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="row">
+    <div class="col-md-4">
+        @using (Html.BeginForm())
+        {
+            <div class="control-group form-group">
+                <div class="controls">
+                    <label>Username</label>
+                    <input name="username" type="text" 
+                           class="form-control" required data-validation-required-message="Please enter your username."/>
+                    <p class="help-block"></p>
+                </div>
+            </div>
+            <div class="control-group form-group">
+                <label>Password</label>
+                <input name="password" type="password"
+                       class="form-control" required data-validation-required-message="Please enter your password."/>
+            </div>
+            <input name="btnLogin" type="submit" value="Submit"/>
+         
+            <div><a href="/User/ForgotPassword">Forgot password?</a></div>
+
+            <div>@{
+                     var siteUrlSsl = HttpHelper.GetRootWeb().Replace("http:","https:");
+                 }
+                <a href="@siteUrlSsl@UserSessionContext.UrlFrontEndLogin">Login with SSL to support with google and facebook</a>
+            </div>
+
+          <div id="btnGooglelogin">Login with google</div>
+
+            <fb:login-button data-size="large" class="fb-login-button" scope="public_profile,email" onlogin="FacebookAuth.checkLoginState();">
+            </fb:login-button>
+        }
+    </div>
+</div>
+@section scripts
+{
+    
+    <script>
+        var GoogleOAuth = {
+            _counter: 0,
+            _gauth: null,
+            init:function() {
+                gapi.auth2.init({
+                    client_id:'1058221121456-9euad6bnqnqbpbak2r493jp15avrtpte.apps.googleusercontent.com',
+                    scope: 'email profile openid'
+                }).then(function() {
+                    GoogleOAuth._gauth = gapi.auth2.getAuthInstance();
+                    var isSigned = GoogleOAuth._gauth.isSignedIn.get();
+                    if (isSigned) {
+                        GoogleOAuth._counter++;
+                    }
+                    gapi.signin2.render('btnGooglelogin', {
+                        'scope': 'profile email',
+                        'width': 240,
+                        'height': 50,
+                        'longtitle': true,
+                        'theme': 'dark',
+                        'onsuccess': GoogleOAuth.onSignIn,
+                        'onfailure': GoogleOAuth.onFail
+                    });
+                });
+            },
+            onSignIn: function (googleUser) {
+                var profile = googleUser.getBasicProfile();
+                var id = profile.getId();
+                var name = profile.getName();
+                var avatarUrl = profile.getImageUrl();
+                var email = profile.getEmail();
+            
+                var idToken = googleUser.getAuthResponse().id_token;
+           
+                if (email == '' || idToken == '') {
+                    alert('Your email will become username, please public your email');
+                    return;
+                }
+                if (GoogleOAuth._counter == 1) {
+                    GoogleOAuth._counter++;
+                    return;
+                }
+                Util.showWaiting();
+                $.post('/User/Googlelogin', { idToken: idToken, googleId:id,name:name,avatarUrl:avatarUrl,email:email})
+                    .done(function(data) {
+                        if (data.Ok) {
+                            Util.hideWaiting();
+                            window.location='/';
+
+                        } else {
+                            Util.hideWaiting();
+                            alert(data.Message);
+                        }
+                    }).fail(function () {
+                        Util.hideWaiting();
+                        alert("Error. can not process");
+                    });
+
+            },
+            signOut: function () {
+                var auth2 = gapi.auth2.getAuthInstance();
+                auth2.signOut();
+            },
+            onFail:function(error){}
+        }
+      
+    </script>
+
+    <script src="https://apis.google.com/js/platform.js?onload=googleOnload" async defer></script>
+    <script>
+       
+        function googleOnload() {
+            gapi.load('auth2', function () {
+                GoogleOAuth.init();
+            });
+        }
+    </script>
+    <script>
+       FacebookAuth= {
+           checkLoginState: function () {
+               FB.getLoginStatus(function(response) {
+                   // The response object is returned with a status field that lets the
+                   // app know the current login status of the person.
+                   // Full docs on the response object can be found in the documentation
+                   // for FB.getLoginStatus().
+                   if (response.status === 'connected') {
+                       // Logged into your app and Facebook.
+
+                       FB.api('/me', { fields: 'name, email,id' }, function(ures) {
+
+                           if (ures.email == null || ures.email == '') {
+                               alert('Should share your email address, we use as username');
+                               return;
+                           }
+                           Util.showWaiting();
+                           $.post('/User/Facebooklogin', {
+                               userId: response.authResponse.userID, accessToken: response.authResponse.accessToken
+                               , uid: ures.id, name: ures.name, email: ures.email, avatarUrl:''
+                           })
+                               .done(function(data) {
+                                   if (data.Ok) {
+                                       Util.hideWaiting();
+                                       window.location='/';
+                                   } else {
+                                       Util.hideWaiting();
+                                       alert(data.Message);
+                                   }
+                               }).fail(function () {
+                                   Util.hideWaiting();
+                                   alert("Error. can not process");
+                               });
+                       });
+                   } else {
+                       alert('Should login with facebook');
+                   }
+               });
+              
+           }
+       }
+        window.fbAsyncInit = function() {
+            FB.init({
+                appId: '1682787808433591',
+                cookie     : true,  // enable cookies to allow the server to access 
+                // the session
+                xfbml      : true,  // parse social plugins on this page
+                version    : 'v2.12' // use graph api version 2.12
+            });
+
+            // Now that we've initialized the JavaScript SDK, we call 
+            // FB.getLoginStatus().  This function gets the state of the
+            // person visiting this page and can return one of three states to
+            // the callback you provide.  They can be:
+            //
+            // 1. Logged into your app ('connected')
+            // 2. Logged into Facebook, but not your app ('not_authorized')
+            // 3. Not logged into Facebook and can't tell if they are logged into
+            //    your app or not.
+            //
+            // These three cases are handled in the callback function.
+
+            //FB.getLoginStatus(function(response) {
+                
+            //});
+
+        };
+
+        // Load the SDK asynchronously
+        (function(d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) return;
+            js = d.createElement(s); js.id = id;
+            js.src = "https://connect.facebook.net/en_US/sdk.js";
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
+
+     
+    </script>
+}

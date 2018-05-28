@@ -1,0 +1,89 @@
+﻿@using Core.FrontEnd.Models
+@model Core.FrontEnd.Models.FeCategory
+@{
+    ViewBag.Title = "Register";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var news = Model.News.FirstOrDefault() ?? new FeCategory.NewsItem();
+}
+
+@section MetaSEO
+{
+    <meta content="@Model.SeoDescription" name="description" />
+    <meta content="@Model.SeoKeywords" name="keywords" />
+}
+<h2>Register</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="control-group form-group">
+            <div class="controls">
+                <label>Email Address (Will be username):</label>
+                <input type="email" class="form-control" id="email" required="" 
+                       data-validation-required-message="Please enter your email address." aria-invalid="false">
+                <div class="help-block"></div></div>
+        </div>
+        <div class="control-group form-group">
+            <div class="controls">
+                <label>Password:</label>
+                <input type="password" class="form-control" id="password" required="" data-validation-required-message="Please enter your password." aria-invalid="false">
+                <p class="help-block"></p>
+            </div>
+        </div>
+        <div class="control-group form-group">
+            <div class="controls">
+                <label>Phone:</label>
+                <input type="text" class="form-control" id="phone" required="" data-validation-required-message="Please enter your phone." aria-invalid="false">
+                <p class="help-block"></p>
+            </div>
+        </div>
+        <div class="control-group form-group">
+            <div class="controls">
+                <label>Address:</label>
+                <input type="text" class="form-control" id="address" required="" data-validation-required-message="Please enter your address." aria-invalid="false">
+                <p class="help-block"></p>
+            </div>
+        </div>
+        <div id="success"></div>
+        <button type="button"
+                onclick="Visitor.register()"
+                class="btn btn-primary" id="btnRegister">Register</button>
+    </div>
+    <div class="col-md-6">@Html.Raw(news.Description)</div>
+</div>
+
+@section scripts{
+    <script>
+        Visitor = {
+            register: function() {
+
+                $(".system-role input:checked").each(function() {
+                    roles.push($(this).attr('data-id'));
+                });
+
+                $.post('/User/Register',
+                        {
+                            email: $('#email').val(),
+                            password: $('#password').val(),
+                            phone: $('#phone').val(),
+                            address: $('#address').val()
+                        })
+                    .done(function(data) {
+                        if (data.Ok) {
+                            $('#success').html(data.Message);
+                            $('#email').val('');
+                            $('#password').val('');
+                            $('#phone').val('');
+                            $('#address').val('');
+                        } else {
+                            toastr.error(data.Message);
+                        }
+                    }).fail(function() {
+                        $('#success').html("Can not make request, check your internet and try to reload page");
+
+                    });
+
+            }
+        }
+    
+    </script>
+}

@@ -1,0 +1,228 @@
+﻿@using DomainDrivenDesign.Core
+@model Core.FrontEnd.Areas.Admin.Models.AdminManageVoucherCodePage
+
+@{
+    ViewBag.Title = "Manage voucher code";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    var currencyCode = EngineeCurrentContext.GetCurrencyCode();
+}
+
+<h2>Manage voucher code</h2>
+
+<div class="search-filter">
+    <input id="txtSearchVoucher" placeholder="search voucher keywords" />
+    <input id="txtSearchOrder" placeholder="search order keywrods" />
+    <input id="txtSearchUser" placeholder="search user keywords" />
+    <select id="voucherMethod">
+        <option value="">Voucher methods</option>
+        @foreach (var s in Model.VoucherMethods)
+        {
+            <option value="@s.Id" @(Model.SelectedMethodId == s.Id ? "selected=selected" : string.Empty)>@s.Name</option>
+        }
+    </select>
+    <select id="isUsed">
+        <option value="">Select status</option>
+        <option value="true">Used</option>
+        <option value="false">Not use</option>
+
+    </select>
+
+    <input type="button" value="Search" onclick="VoucherCodeManagement.refresh()" />
+</div>
+<div class="row">
+    <div class="col-md-8">
+        <table id="tblView"></table>
+    </div>
+    <div class="col-md-4">
+        <h3>Create voucher codes</h3>
+        <div>Voucher method:</div>
+        <select id="selectedVoucherMethod">
+            <option value="">Choose voucher methods</option>
+            @foreach (var s in Model.VoucherMethods)
+            {
+                <option value="@s.Id" @(Model.SelectedMethodId == s.Id ? "selected=selected" : string.Empty)>@s.Name</option>
+            }
+        </select>
+        <div>
+            <div>Quantity:</div>
+            <input id="quantity" value="1" />
+        </div>
+        <div>
+            <div>Code value: </div>
+            <input id="codeValue" value="1" />
+        </div>
+        <button onclick="VoucherCodeManagement.create()">Create</button>
+    </div>
+</div>
+
+
+@section scripts
+{
+    <script>
+        VoucherCodeManagement = {
+            _$tblView: null,
+            _guidEmpty: '@Guid.Empty.ToString()',
+            init: function($tblView) {
+
+                VoucherCodeManagement._$tblView = $tblView;
+
+                VoucherCodeManagement.initTable();
+
+             },
+            initTable: function() {
+                VoucherCodeManagement._$tblView.bootstrapTable({
+                    idField: 'Id',
+                    method: 'post',
+                    url: '/Admin/AdminVoucher/List?__=' + (new Date().getTime()),
+                    sidePagination: 'server',
+                    pagination: true,
+                    showToggle: false,
+                    minimumCountColumns: 1,
+                    pageSize: 10,
+                    pageList: [10, 20, 50, 100, 200],
+                    showColumns: false,
+                    showRefresh: false,
+                    sortName: 'CreatedDate',
+                    sortOrder: 'desc',
+                    queryParams: function(p) {
+
+                        return {
+                            sortField: p.sort,
+                            orderBy: p.order,
+                            take: p.limit,
+                            skip: p.offset,
+                            voucherKeywords: $('#txtSearchVoucher').val() ,
+                            userKeywords: $('#txtSearchUser').val(),
+                            orderKeywords: $('#txtSearchOrder').val(),
+                            methodId: $('#voucherMethod').val(),
+                            isUsed: $('#isUsed').val()
+                        };
+                    },
+                    columns: [
+                        {
+                            field: 'Code',
+                            title: 'Code',
+                            align: 'left',
+                            valign: 'middle'
+                        }
+                       ,{
+                            field: 'Applied',
+                            title: 'Status',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                var temp = '';
+                                if (row.Applied) {
+                                    temp += 'Used';
+                                    temp += '<br>Apply to Order:' + row.AppliedForOrderCode;
+                                } else {
+                                    temp += 'Not use';
+                                }
+                                return temp;
+                            }
+                        }, {
+                            field: 'Value',
+                            title: 'Value',
+                            align: 'left',
+                            valign: 'middle'
+                        }
+                        , {
+                            field: 'VoucherMethodId',
+                            title: 'Methods',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return 'Name: ' + row.VoucherMethodName + '<br>Description: ' + row.VoucherMethodDescription;
+                            }
+                        }, {
+                            field: 'CreatedDate',
+                            title: 'CreatedDate',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return Util.dateTimeFromJson(value);
+                            }
+                        }
+                        , {
+                            field: 'Id',
+                            title: '',
+                            align: 'left',
+                            valign: 'middle',
+                            width:120,
+                            formatter: function(value, row) {
+                                var temp = '<a onclick="VoucherCodeManagement.deleteVoucherCode(\'' + row.Id + '\')">Delete</a>';
+                                 return temp;
+                            }
+                        }
+                    ]
+                });
+
+            }
+            ,
+            refresh: function () {
+                VoucherCodeManagement._$tblView.bootstrapTable('refresh');
+            }
+            ,
+            deleteVoucherCode: function(id) {
+                bootbox.confirm('Do you want to DELETE voucher code?',
+                    function(result) {
+                        if (!result) return;
+                        var ids = [];
+                        ids.push(id);
+
+                        $.post('/Admin/AdminVoucher/DeleteVoucherCode',
+                                {
+                                    ids: ids
+                                })
+                            .done(function(data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                    VoucherCodeManagement.refresh();
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function() {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+                    });
+            }
+
+            ,
+            create: function () {
+                bootbox.confirm('Do you want to CREATE voucher codes?',
+                    function (result) {
+                        if (!result) return;
+                        var data={
+                            quantity: $('#quantity').val(),
+                            codeValue: $('#codeValue').val(),
+                            voucherMethodId: $('#selectedVoucherMethod').val()
+                        }
+                        if (data.voucherMethodId == '') {
+                            alert('You must choose voucher method');
+                            return;
+                        }
+                        $.post('/Admin/AdminVoucher/CreateVoucherCode',
+                            data)
+                            .done(function (data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                    VoucherCodeManagement.refresh();
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function () {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+                    });
+            }
+        }
+
+        VoucherCodeManagement.init($('#tblView'));
+    </script>
+}

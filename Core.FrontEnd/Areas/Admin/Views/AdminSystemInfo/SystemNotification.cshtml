@@ -1,0 +1,61 @@
+﻿@model dynamic
+
+@{
+    ViewBag.Title = "System notification";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<h2>System notification</h2>
+<div>
+    Type: <select id="type">
+        <option value="info" selected="selected">Info</option>
+        <option value="warning">Warning</option>
+        <option value="success">Success</option>
+        <option value="error">Error</option>
+    </select>
+</div>
+<textarea id="msg" class="system-msg"></textarea>
+<div>
+    <button id="btnSentToAll" onclick="AdminSystemNotification.broadCast()">Send to all</button>
+</div>
+
+@section scripts
+{
+    <script>
+        var AdminSystemNotification = {
+            init:function() {
+                Util.initTinyMceClassName('.system-msg', 100);
+            },
+            broadCast: function () {
+                var msgTitle = 'Do you want to BROAD CAST?';
+
+                bootbox.confirm(msgTitle,
+                    function (result) {
+                        if (!result) return;
+
+                        var data = {
+                            //message: $('#msg').val(),
+                            message: tinymce.get('msg').getContent(),
+                            type: $('#type').val()
+                        };
+                        $.post('/Admin/AdminSystemInfo/BroadCastMessage', data)
+                            .done(function (data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function () {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+                    });
+
+            }
+        }
+
+        AdminSystemNotification.init();
+    </script>
+}

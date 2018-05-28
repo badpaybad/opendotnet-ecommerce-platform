@@ -1,0 +1,251 @@
+﻿@using DomainDrivenDesign.Core
+@model Core.FrontEnd.Models.FeShoppingCartPage
+
+@{
+    ViewBag.Title = "Shopping cart";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var currencyCode = EngineeCurrentContext.GetCurrencyCode();
+    var exchangeRate = EngineeCurrentContext.GetCurrencyExchangeRate();
+    var defaultLang = EngineeCurrentContext.GetDefaultLanguage();
+    var currentLang = EngineeCurrentContext.GetCurrentLanguage();
+}
+@section head
+{
+    <link href="/assets/bootstraptable/bootstrap-table.css" rel="stylesheet" />
+}
+<h2>Shopping cart</h2>
+<a href="/">Back to home page</a>
+@if (Model.CartItemCount <= 0)
+{
+    <div>
+        No item to checkout, please add item to cart.
+    </div>
+}
+<div  style="@(Model.CartItemCount<=0?"display:none":string.Empty)">
+    <table id="tblView"></table>  
+    @if (string.IsNullOrEmpty(Model.ErrorMessage) == false)
+    {
+        <div>@Model.ErrorMessage</div>
+    }
+    @if (Model.OrderPromotion.Id != Guid.Empty)
+    {
+        <div>
+            @Html.Raw(Model.OrderPromotion.Description)
+            @if (Model.OrderPromotion.FreeShip)
+            {
+                <div title="Free ship because your total order greater than @(Model.OrderPromotion.AmountToDiscount * exchangeRate)@currencyCode">
+                   [Checkout] for Free ship
+                </div>
+            }
+            @if (Model.OrderPromotion.DiscountAmount > 0)
+            {
+                <div title="Your save @(Model.OrderPromotion.DiscountAmount * exchangeRate)@currencyCode because your total order greater than">
+                    [Checkout] get discount amount: @(Model.OrderPromotion.DiscountAmount * exchangeRate)@currencyCode
+                </div>
+            }
+        </div>
+    }
+    <div>
+        <button onclick="ShoppingCartPage.removeAllProduct()" class="btn btn-primary">Remove all items</button>
+        <button onclick="ShoppingCartPage.doCheckout()" class="btn btn-primary">Checkout</button>
+    </div>
+</div>
+@section scripts
+{
+    <script src="/assets/bootstraptable/bootstrap-table.js"></script>
+    <script src="/assets/bootstraptable/bootstrap-table-filter.js"></script>
+
+    <script>
+        ShoppingCartPage = {
+            _$tblView: null,
+            init: function ($tblView) {
+
+                ShoppingCart._functionReloadList= function() {
+                    ShoppingCartPage.refresh();
+                }
+
+                ShoppingCartPage._$tblView = $tblView;
+
+                ShoppingCartPage.initTable();
+
+            },
+            initTable: function() {
+                ShoppingCartPage._$tblView.bootstrapTable({
+                    idField: 'ProductId',
+                    method: 'post',
+                    url: '/ShoppingCart/ListResult?__=' + (new Date().getTime()),
+                    sidePagination: 'server',
+                    pagination: false,
+                    showToggle: false,
+                    showFooter: true,
+                    minimumCountColumns: 1,
+                    pageSize: 10,
+                    pageList: [10, 20, 50, 100, 200],
+                    showColumns: false,
+                    showRefresh: false,
+                    sortName: 'CreatedDate',
+                    sortOrder: 'desc',
+                    queryParams: function(p) {
+
+                        return {
+                            id: '@Model.Id',
+                            sortField: p.sort,
+                            orderBy: p.order,
+                            take: p.limit,
+                            skip: p.offset
+                        };
+                    },
+                    columns: [
+                        {
+                            field: 'UrlImage',
+                            title: '',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                if (row.UrlImage == null) {
+                                    row.UrlImage = "/Content/imgs/no-image.png";
+                                }
+                                return '<a href="/product/' + row.SeoUrlFriendly+'">' +
+                                    '<img class="shopping-cart-item-img" src="' + row.UrlImage + '" alt="' + row.ProductCode+'"/></a>';
+
+                            },
+                            width:90
+                        },
+                        {
+                            field: 'Title',
+                            title: 'Title',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function(value, row) {
+                                var temp = '<a href="/product/' + row.SeoUrlFriendly + '"><i>[' + row.ProductCode + '] '
+                                    + row.Title + '</i></a>';
+                                if (row.PromotionDescription != null) {
+                                    temp += '<br>' + row.PromotionDescription;
+                                }
+
+                                return temp;
+                            }
+                        }
+                        ,
+                        {
+                            field: 'UnitPrice',
+                            title: 'UnitPrice',
+                            align: 'right',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                var temp = '' + (parseFloat(value) * parseFloat('@currentLang.CurrencyExchangeRate'))
+                                    + '@currentLang.CurrencyCode';//
+                                var clId = '@currentLang.Id';
+                                var dlId = '@defaultLang.Id';
+                                if (clId != dlId) {
+                                    temp +='<br>('+ value + ' @defaultLang.CurrencyCode)';
+                                }
+
+                                return temp;
+                            }
+                        }
+                        ,
+                        {
+                            field: 'Quantity',
+                            title: 'Quantity',
+                            align: 'right',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value ;
+                            },
+                            footerFormatter:function() {
+                                var temp = '<strong>SubTotal: </strong>';
+                                //temp += "<br><strong>Dicount:</strong>";
+                                //temp += "<br><strong>Total:</strong>";
+                                return temp;
+                            }
+                        }
+                        ,
+                        {
+                            field: 'TotalPrice',
+                            title: 'TotalPrice',
+                            align: 'right',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                var temp = '' + (parseFloat(value) * parseFloat('@currentLang.CurrencyExchangeRate'))
+                                    + '@currentLang.CurrencyCode';
+                                return temp;
+                            },
+                            footerFormatter: function (data) {
+                                var totalSum = data.reduce(function(sum, row) {
+                                    return (sum) + (row.TotalPrice) ;
+                                }, 0);
+                                var temp = '' + (parseFloat(totalSum) * parseFloat('@currentLang.CurrencyExchangeRate'))
+                                    + '@currentLang.CurrencyCode';
+                                @*temp += '<br>@(Model.CartDiscount* currentLang.CurrencyExchangeRate)@currentLang.CurrencyCode';
+                                temp += '<br>@(Model.CartTotal* currentLang.CurrencyExchangeRate)@currentLang.CurrencyCode';*@
+                                return temp;
+                            }
+                        },
+                        {
+                            field: 'ProductId',
+                            title: '',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                var temp = '<a href="javascript:" ' +
+                                    'onclick="ShoppingCartPage.addProduct(\''+row.ProductId+'\',\''+row.Title+'\')">Add</a>';
+                                temp += ' | <a href="javascript:"' +
+                                    'onclick="ShoppingCartPage.removeProduct(\'' + row.ProductId + '\',\'' + row.Title + '\')">Remove</a>';
+                                temp += ' | <a href="javascript:"' +
+                                    'onclick="ShoppingCartPage.deleteProduct(\'' + row.ProductId + '\','+row.Quantity+',\'' + row.Title + '\')">Delete</a>';
+                                return temp;
+                            }
+                        }
+                    ]
+                });
+
+            }
+            ,
+            refresh: function () {
+                ShoppingCartPage._$tblView.bootstrapTable('refresh');
+            },
+            addProduct:function(productId, title) {
+                ShoppingCart.addProduct(productId, 1, title);
+
+            },
+            removeProduct: function(productId, title) {
+                ShoppingCart.removeProduct(productId, 1, title);
+
+            },
+            deleteProduct: function (productId, quantity, title) {
+
+                ShoppingCart.removeProduct(productId, quantity, title);
+
+            },
+            removeAllProduct: function () {
+                ShoppingCart.removeAllProduct();
+
+            },
+            doCheckout: function (productId, quantity, title, callSuccessCallBack) {
+                var cfr = confirm('Do you want to CHECKOUT?');
+                if (!cfr) return;
+                var data = {
+
+                }
+
+                Util.showWaiting();
+
+                $.post('/ShoppingCart/PreCalculate', data)
+                    .done(function (data) {
+                        if (data.Ok) {
+                            window.location = '/ShoppingCart/Checkout';
+                        } else {
+                            Util.hideWaiting();
+                            alert('Error. Can not proccess');
+                        }
+                    }).fail(function () {
+                        Util.hideWaiting();
+                        alert('Error. Can not proccess');
+                    });
+            }
+        }
+
+        ShoppingCartPage.init($('#tblView'));
+    </script>
+}

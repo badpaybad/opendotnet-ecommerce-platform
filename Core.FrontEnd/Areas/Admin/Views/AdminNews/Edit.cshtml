@@ -1,0 +1,486 @@
+﻿@using DomainDrivenDesign.Core.Utils
+@using Core.FrontEnd.Areas.Admin.Models
+@using Newtonsoft.Json
+@model Core.FrontEnd.Areas.Admin.Models.NewsEditAdminPage
+@{
+    ViewBag.Title = Model.PageMode == PageMode.Edit ? "Edit" : "Create";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<h2>@(Model.PageMode == PageMode.Edit ? "Edit" : "Create") news in category: @Model.CategoryTitle</h2>
+
+<div>
+    <a href="/Admin/AdminNews/Index/@Model.CategoryId">Back to category</a> |
+    <a href="/Admin/AdminNews/Edit/?categoryId=@Model.CategoryId&id=@Guid.Empty">Click here to create new</a>
+
+</div>
+
+<div class="portlet light bordered">
+    <div class="portlet-title">
+        <div class="caption">
+            @if (Model.PageMode == PageMode.Edit)
+            {
+                <div>Edit</div>
+                <div class="caption-desc">@Model.Title</div>
+                <div class="caption">Items is @(Model.Published ? "Published" : "Unpublished"), created at: @Model.CreatedDate.ToString("yyyy-MM-dd")</div>
+            }
+            else
+            {
+                <span>Create new</span>
+            }
+        </div>
+        <div class="actions">
+        </div>
+    </div>
+    <div class="portlet-body form">
+        <ul class="nav nav-tabs">
+            <li class="active">
+                <a href="#tab_1_1" data-toggle="tab" aria-expanded="true"> Basic </a>
+            </li>
+            @if (Model.PageMode == PageMode.Edit)
+            {
+                <li class="">
+                    <a href="#tab_1_2" data-toggle="tab" aria-expanded="false"> SEO </a>
+                </li>
+                <li class="">
+                    <a href="#tab_1_3" data-toggle="tab" aria-expanded="false"> Categories </a>
+                </li>
+                if (Model.AllowComment)
+                {
+                    <li class="">
+                        <a href="#tab_1_4" data-toggle="tab" aria-expanded="false"> Comments </a>
+                    </li>
+                }
+            }
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane active" id="tab_1_1">
+                <div class="form-group">
+                    <label class="control-label">Title</label>
+                    <input id="title" type="text" placeholder="title" class="form-control"
+                           value="@Model.Title">
+                </div>
+                <div class="form-group">
+                    <label class="control-label">
+                        <input id="allowComment" type="checkbox" 
+                               @(Model.AllowComment ? "checked=checked" : string.Empty)>  Allow comment
+                    </label>
+                </div>
+                <div class="form-group">
+                    <div class="row">
+                        <div class="col-md-9">
+                            <label class="control-label">UrlImage (Click image or textbox to change image)</label>
+                            <input id="urlImage" type="text" placeholder="click to select image" class="form-control"
+                                   value="@Model.UrlImage" onclick="RoxyFileMan.openCustomRoxy('newUrlImage', 'urlImage')">
+
+                        </div>
+                        <div class="col-md-3">
+                            <label class="control-label">&nbsp;</label>
+                            <img style="height: 40px" src="@Model.UrlImage" id="newUrlImage" title="click to change image"
+                                 onclick="RoxyFileMan.openCustomRoxy('newUrlImage', 'urlImage')" />
+                        </div>
+                    </div>
+
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Short description</label>
+                    <textarea id="shortDescription" type="text" placeholder="short description" class="form-control">@Model.ShortDescription</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Description</label>
+                    <div>
+                        Insert Google map use Media -> Embed with code iframe from this link: <a href="https://developers.google.com/maps/documentation/embed/start">build map</a>
+                    </div>
+                    <textarea id="description" type="text" placeholder="description" class="text-editor">@Model.Description</textarea>
+                </div>
+                <input id="id" type="hidden" value="@Model.Id" />
+
+                <div class="form-actions">
+                    @if (Model.PageMode == PageMode.Create)
+                    {
+                        <input class="btn btn-default" id="btnSave" type="button" value="Save new"
+                               onclick="NewsEditPage.save()">
+                    }
+                    else
+                    {<input class="btn btn-default" id="btnSave" type="button" value="Save"
+                            onclick="NewsEditPage.save()">
+
+                        <input class="btn btn-default" id="btnDelete" type="button" value="Delete"
+                               onclick="NewsEditPage.delete()">
+
+                        <input class="btn btn-default" id="btnPublish" type="button" value="Publish"
+                               onclick="NewsEditPage.publish(true)">
+
+                        <input class="btn btn-default" id="btnUnpublish" type="button" value="Unpublish"
+                               onclick="NewsEditPage.publish(false)">
+                    }
+                </div>
+            </div>
+            @if (Model.PageMode == PageMode.Edit)
+            {
+                <div class="tab-pane" id="tab_1_2">
+                    <div class="form-group">
+                        <label class="control-label">Keywords</label>
+                        <input id="seoKeywords" type="text" placeholder="seo keywords" class="form-control"
+                               value="@Model.SeoKeywords">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">Description</label>
+                        <input id="seoDescription" type="text" placeholder="seo description" class="form-control"
+                               value="@Model.SeoDescription">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">Url friendly (leave empty to use title)</label>
+                        <input id="seoUrlFriendly" type="text" placeholder="seo url friendly" class="form-control"
+                               value="@Model.SeoUrlFriendly">
+                    </div>
+
+                    <div class="form-actions">
+                        <input class="btn btn-default" id="btnSaveSeo" type="button" value="Save"
+                               onclick="NewsEditPage.saveSeo()">
+
+                    </div>
+                </div>
+
+                <div class="tab-pane" id="tab_1_3">
+
+                    <div id="checkbox-category-tree" class="checkbox-category-tree"></div>
+
+                    <div class="form-actions">
+                        <input class="btn btn-default" id="btnSaveCategories" type="button" value="Save"
+                               onclick="NewsEditPage.saveCategories()">
+
+                    </div>
+                </div>
+                if (Model.AllowComment)
+                {
+                    <div class="tab-pane" id="tab_1_4">
+                        <table id="tblComments"></table>
+                        <div>
+                        
+                            <textarea id="txtComment" style="width:80%"></textarea><br />
+                            <button onclick="NewsComment.postComment()">Post comment</button>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@section scripts
+{
+<script src="/assets/global/plugins/jquery.twbsPagination.js"></script>
+    <script>
+        NewsEditPage = {
+            _checkBoxTree: null,
+            _$checkBoxTree:null,
+            init: function ($checkBoxTree) {
+                NewsEditPage._$checkBoxTree = $checkBoxTree;
+                NewsEditPage.loadTree();
+            },
+            loadTree: function () {
+                var checkedOnload = @Html.Raw(JsonConvert.SerializeObject(Model.NewsCategoies));
+                NewsEditPage._checkBoxTree = NewsEditPage._$checkBoxTree
+                    .on('select_node.jstree', function (e, data) {
+                        if (data.event) {
+                            data.instance.select_node(data.node.children_d);
+                        }
+                    })
+                    .on('deselect_node.jstree', function (e, data) {
+                        if (data.event) {
+                            data.instance.deselect_node(data.node.children_d);
+                        }
+                    })
+                    .on('loaded.jstree',function() {
+                        
+                    })
+                    .jstree({
+                        "core": {
+                            "themes": {
+                                "responsive": false
+                            },
+                            "check_callback": true,
+                            'data': {
+                                'url': function(node) {
+                                    return '/Admin/AdminNews/CategoryTree?checkedOnload=' + encodeURIComponent(checkedOnload);
+                                },
+                                'data': function(node) {
+                                    return { 'id': node.id };
+                                }
+                            }
+                        },
+                        "types": {
+                            "default": {
+                                "icon": "fa fa-folder icon-state-warning icon-lg"
+                            },
+                            "root": {
+                                "icon": "fa fa-folder icon-state-warning icon-lg"
+                            },
+                            "file": {
+                                "icon": "fa fa-file icon-state-warning icon-lg"
+                            }
+                        },
+                        "plugins": ["checkbox", "types"],
+                        checkbox: {
+                            cascade: "", three_state: false
+                        }
+                        ,expand_selected_onload: true
+                    });
+            },
+            save: function() {
+                var data = {
+                    categoryId: '@Model.CategoryId',
+                    id: '@Model.Id',
+                    title: $('#title').val(),
+                    allowComment: $('#allowComment').prop('checked'),
+                    urlImage: $('#urlImage').val(),
+                    shortDescription: $('#shortDescription').val(),
+                    description: tinymce.get('description').getContent(),
+                    isSaveNew: @(Model.PageMode == PageMode.Create ? "true" : "false")
+                };
+
+                $.post('/Admin/AdminNews/Save', data)
+                    .done(function(data) {
+                        if (data.Ok) {
+                            toastr.success(data.Message);
+                            window.location = '/Admin/AdminNews/Edit/?id=' +
+                                data.Data.Id +
+                                '&categoryId=@Model.CategoryId';
+                        } else {
+                            toastr.error(data.Message);
+                        }
+                    }).fail(function() {
+                        bootbox.alert({
+                            message: "Can not make request, check your internet and try to reload page",
+                            backdrop: true
+                        });
+                    });
+            },
+            delete: function() {
+                bootbox.confirm('Do you want to DELETE?',
+                    function(result) {
+                        if (!result) return;
+
+                        $.post('/Admin/AdminNews/Delete',
+                                {
+                                    id: '@Model.Id'
+                                })
+                            .done(function(data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                    window.location = '/Admin/AdminNews/Index/@Model.CategoryId';
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function() {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+                    });
+
+            },
+            publish: function (isPublish) {
+                var msgTitle = 'Do you want to PUBLISH?';
+                if (isPublish != true) {
+                    msgTitle = 'Do you want to UNPUBLISH?';
+                }
+                bootbox.confirm(msgTitle,
+                    function(result) {
+                        if (!result) return;
+
+                        $.post('/Admin/AdminNews/Publish',
+                                {
+                                    id: '@Model.Id',
+                                    isPublish: isPublish
+                                })
+                            .done(function(data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                    window.location = '/Admin/AdminNews/Index/@Model.CategoryId';
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function() {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+                    });
+
+            }
+            @if (Model.PageMode == PageMode.Edit)
+            {
+                <text>
+            ,
+            saveSeo: function() {
+                var data = {
+                    id: '@Model.Id',
+                    seoUrlFriendly: $('#seoUrlFriendly').val(),
+                    seoKeywords: $('#seoKeywords').val(),
+                    seoDescription: $('#seoDescription').val()
+                };
+
+                $.post('/Admin/AdminNews/SaveSeo', data)
+                    .done(function(data) {
+                        if (data.Ok) {
+                            toastr.success(data.Message);
+
+                        } else {
+                            toastr.error(data.Message);
+                        }
+                    }).fail(function() {
+                        bootbox.alert({
+                            message: "Can not make request, check your internet and try to reload page",
+                            backdrop: true
+                        });
+                    });
+            },
+            saveCategories: function() {
+                var checkedIds = [];
+
+                var arrChecked = NewsEditPage._$checkBoxTree.jstree("get_checked",null, true);
+
+                for (var i = 0; i < arrChecked.length; i++) {
+                    checkedIds.push(arrChecked[i]);
+                }
+
+                var data = {
+                    id:'@Model.Id',
+                    categoryIds: checkedIds
+                };
+
+                $.post('/Admin/AdminNews/SaveCategories', data)
+                    .done(function(data) {
+                        if (data.Ok) {
+                            toastr.success(data.Message);
+                            window.location = '/Admin/AdminNews/Edit/?id=' +
+                                data.Data.Id +
+                                '&categoryId=@Model.CategoryId';
+                        } else {
+                            toastr.error(data.Message);
+                        }
+                    }).fail(function() {
+                        bootbox.alert({
+                            message: "Can not make request, check your internet and try to reload page",
+                            backdrop: true
+                        });
+                    });
+
+            }
+                </text>
+            }
+
+        }
+
+        NewsEditPage.init($('#checkbox-category-tree'));
+    </script>
+    
+    @if (Model.AllowComment)
+    {
+     
+        <script>
+            NewsComment= {
+                init:function() {
+                    NewsComment.initTable();
+                    
+                }
+                ,
+                postComment:function() {
+                    bootbox.confirm('Do you want to POST COMMENT?',
+                        function(result) {
+                            if (!result) return;
+
+                            var data = {
+                                id: '@Model.Id',
+                                comment:$('#txtComment').val()
+                            };
+                            if (data.comment == '') {
+                                toastr.error('Must input comment');
+                                return;
+                            }
+                            $.post('/Admin/AdminNews/AddComent',
+                                    data)
+                                .done(function(data) {
+                                    if (data.Ok) {
+                                        toastr.success(data.Message);
+                                        $('#txtComment').val('');
+                                        NewsComment.refresh();
+                                    } else {
+                                        toastr.error(data.Message);
+                                    }
+                                }).fail(function() {
+                                    bootbox.alert({
+                                        message: "Can not make request, check your internet and try to reload page",
+                                        backdrop: true
+                                    });
+                                });
+                        });
+                },
+                refresh: function () {
+                    $('#tblComments').bootstrapTable('refresh');
+                },
+                initTable: function() {
+                    $('#tblComments').bootstrapTable({
+                        idField: 'Id',
+                        //data: AdminUser.arrayCheckedIds,
+                        method: 'post',
+                        url: '/Admin/AdminNews/ListComments?__=' + (new Date().getTime()),
+                        sidePagination: 'server',
+                        pagination: true,
+                        showToggle: false,
+                        minimumCountColumns: 1,
+                        pageSize: 10,
+                        pageList: [10, 20, 50, 100, 200],
+                        showColumns: false,
+                        showRefresh: false,
+                        sortName: 'CreatedDate',
+                        sortOrder: 'desc',
+                        queryParams: function(p) {
+                            return {
+                                newsId:'@Model.Id',
+                                sortField: p.sort,
+                                orderBy: p.order,
+                                take: p.limit,
+                                skip: p.offset
+                            };
+                        },
+                        columns: [
+                            {
+                                field: 'Content',
+                                title: 'Comment',
+                                align: 'left',
+                                valign: 'middle',
+                                formatter: function(value, row) {
+                                    return value;
+                                }
+                            }, {
+                                field: 'AuthorName',
+                                title: 'AuthorName',
+                                align: 'left',
+                                valign: 'middle',
+                                formatter: function (value, row) {
+                                    return value;
+                                }
+                            }, {
+                                field: 'CreatedDate',
+                                title: 'CreatedDate',
+                                align: 'left',
+                                valign: 'middle',
+                                formatter: function (value, row) {
+                                    return Util.dateTimeFromJson( value);
+                                }
+                            }
+                        ]
+                    });
+
+                }
+            }
+
+            NewsComment.init();
+        </script>
+    }
+}

@@ -1,0 +1,424 @@
+﻿@using DomainDrivenDesign.Core
+@using DomainDrivenDesign.Core.Utils
+@model Core.FrontEnd.Areas.Admin.Models.AdminOrderPage
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    var currencyCode = EngineeCurrentContext.GetCurrencyCode();
+    var listOrderStatus = EnumsExtensions.ListOrderStatus();
+    var listPayStatus = EnumsExtensions.ListPayStatus();
+    var currentLang = EngineeCurrentContext.GetCurrentLanguage();
+    var todayOnload = DateTime.Now.ToString("yyyy-MM-dd");
+    var nextdayOnload = DateTime.Now.AddDays(1).ToString("yyyy-MM-dd");
+    var xtoday = DateTime.Now.ToString("yyyy-MM-dd");
+    var xnextday = DateTime.Now.AddDays(1).ToString("yyyy-MM-dd");
+    var orderConfirmed = (short) Enums.ShoppingCartStatus.OrderConfirmed;
+    if (Model.Status != null)
+    {
+        todayOnload = string.Empty;
+        nextdayOnload = string.Empty;
+        orderConfirmed =  Model.Status.Value;
+    }
+}
+
+<h2>Order management</h2>
+
+<div class="search-filter">
+    <input id="txtSearchOrder" placeholder="search order keywrods" />
+    <input id="txtSearchProduct" placeholder="search product keywords" />
+    <select id="orderStatus">
+        <option value="-1">Order status</option>
+        @foreach (var s in listOrderStatus)
+        {
+            <option value="@s.Key" @(orderConfirmed==s.Key?"selected='selected'":string.Empty)>@s.Value</option>
+        }
+    </select>
+    <select id="payStatus">
+        <option value="-1">Pay status</option>
+        @foreach (var s in listPayStatus)
+        {
+            <option value="@s.Key">@s.Value</option>
+        }
+    </select>
+    <div style="display: inline-block">
+        [<input class="date-picker-inline" type="text" value=""
+                placeholder="from created date" id="fromDate"> -
+        <input class="date-picker-inline" type="text" value=""
+               placeholder="to created date" id="toDate">
+        <a href="javascript:"  onclick="$('#fromDate').val('@xtoday'); $('#toDate').val('@xnextday');" title="today">Today</a>
+        <a href="javascript:" onclick="$('#fromDate').val(''); $('#toDate').val('');" title="clear date time">x</a>]
+    </div>
+    <div style="display: inline-block">
+        [<input class="date-picker-inline" type="text" value="@todayOnload"
+                placeholder="from receiving time" id="rtFromDate"> -
+        <input class="date-picker-inline" type="text" value="@nextdayOnload"
+               placeholder="to receiving time" id="rtToDate">
+        <a href="javascript:"  onclick="$('#rtFromDate').val('@xtoday'); $('#rtToDate').val('@xnextday');" title="today">Today</a>
+        <a onclick="$('#rtFromDate').val(''); $('#rtToDate').val('');" title="clear date time">x</a>]
+    </div>
+    <input type="button" value="Search" onclick="OrderAdminPage.refresh()" />
+</div>
+<table id="tblView"></table>
+<div id="orderDetail" style="display:none" title="Order detail">
+    <iframe id="ifrOrderDetail" src=""
+            style="width:100%; height: 100%; min-height: 500px" frameborder="0"></iframe>
+</div>
+@section scripts
+{
+    <script>
+        OrderAdminPage = {
+            _$tblView: null,
+            _guidEmpty: '@Guid.Empty.ToString()',
+            _$txtSearchOrder: null,
+            _$txtSearchProduct: null,
+            init: function($tblView, $txtSearchOrder, $txtSearchProduct) {
+
+                OrderAdminPage._$txtSearchProduct = $txtSearchProduct;
+
+                OrderAdminPage._$txtSearchOrder = $txtSearchOrder;
+
+                OrderAdminPage._$tblView = $tblView;
+
+                OrderAdminPage.initTable();
+
+                if (jQuery().datepicker) {
+                    $('.date-picker-inline').datepicker({
+                        orientation: "left",
+                        autoclose: true,
+                        format: 'yyyy-mm-dd',
+                        pickDate: true,
+                        pickHour: false,
+                        defaultDate: new Date()
+                    });
+                }
+            },
+            showDetail: function (orderId) {
+                $('#orderDetail iframe').attr("src", "/Admin/AdminOrder/Detail?orderId="+orderId);
+                $('#orderDetail').dialog({ modal: true, minHeight: 500, minWidth: 800 });
+            },
+            initTable: function() {
+                OrderAdminPage._$tblView.bootstrapTable({
+                    idField: 'Id',
+                    method: 'post',
+                    url: '/Admin/AdminOrder/List?__=' + (new Date().getTime()),
+                    sidePagination: 'server',
+                    pagination: true,
+                    showToggle: false,
+                    minimumCountColumns: 1,
+                    pageSize: 10,
+                    pageList: [10, 20, 50, 100, 200],
+                    showColumns: false,
+                    showRefresh: false,
+                    sortName: 'CreatedDate',
+                    sortOrder: 'desc',
+                    queryParams: function(p) {
+                        var orderKeywords = OrderAdminPage._$txtSearchOrder.val();
+                        var productKeywords = OrderAdminPage._$txtSearchProduct.val();
+                        return {
+                            sortField: p.sort,
+                            orderBy: p.order,
+                            take: p.limit,
+                            skip: p.offset,
+                            orderKeywords: orderKeywords ,
+                            productKeywords: productKeywords,
+                            fromDate: $('#fromDate').val(),
+                            toDate: $('#toDate').val(),
+                            rtFromDate: $('#rtFromDate').val(),
+                            rtToDate: $('#rtToDate').val(),
+                            orderStatus: $('#orderStatus').val(),
+                            payStatus: $('#payStatus').val()
+                        };
+                    },
+                    columns: [
+                        {
+                            field: 'OrderCode',
+                            title: 'OrderCode',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter:function(value, row) {
+                                var temp = '<a onclick="OrderAdminPage.showDetail(\'' + row.Id + '\')">' + value + '</a>'
+                                    + '<br>Note: ' + row.Note;
+                                return temp;
+                            }
+                        }, {
+                            field: 'CreatedDate',
+                            title: 'CreatedDate',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return Util.dateTimeFromJson( value);
+                            }
+                        }
+                        , {
+                            field: 'ReceivingTime',
+                            title: 'ReceivingTime',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return Util.dateTimeFromJson(value);
+                            }
+                        }
+                        //ReceivingTime
+                        , {
+                            field: 'CartTotal',
+                            title: 'CartTotal',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                var temp = (value *parseFloat('@currentLang.CurrencyExchangeRate')) + '@currencyCode';
+                                if (row.VoucherCode != '') {
+                                    temp += '<br>' + row.VoucherCode + ' : ' + row.VoucherValue;
+                                }
+                                return temp;
+                            }
+                        }
+                        ,{
+                            field: 'OrderStatus',
+                            title: 'OrderStatus',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                var temp= row.OrderStatusText;
+                                temp = temp + OrderAdminPage.buildOrderFunction(row.Id, row.OrderStatusId);
+                                return temp;
+                            }
+                        }
+                        , {
+                            field: 'PayStatus',
+                            title: 'Pay&Ship Status',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                var temp= 'Pay: ' + row.PayStatusText +' ('+ row.PaymentMethodName+')' 
+                                    + '<br>Ship: ' + row.ShipStatusText + ' (' + row.ShippingMethodName +')'
+                                  ;
+                                temp = temp  + OrderAdminPage.buildPayFunction(row.Id, row.OrderStatusId,row.PayStatusId,row.OrderCode);
+                                return temp;
+                            }
+                        }, {
+                            field: 'Note',
+                            title: 'Customer',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return row.CustomerName + '<br>' +
+                                    row.CustomerAddress + '<br>' +
+                                    row.CustomerEmail + '<br>' +
+                                    row.CustomerPhone ;
+                            }
+                        }
+                       
+                    ]
+                });
+
+            }
+            ,
+            buildOrderFunction: function (id, status) {
+                if (status == @((short)Enums.ShoppingCartStatus.OrderClosed)) {
+                    return '';
+                }
+                if (status == @((short)Enums.ShoppingCartStatus.OrderCanceled)) {
+                    return '';
+                }
+
+                var btnConfirmOrder = ' | <a onclick="OrderAdminPage.confirmOrder(\'' + id + '\')">Confirm order</a>';
+                var btnClose = ' | <a onclick="OrderAdminPage.closeOrder(\''+id+'\')">Close order</a>';
+                var btnCancel = ' | <a onclick="OrderAdminPage.cancelOrder(\'' + id + '\')">Cancel order</a>';
+                var temp = '<br>';
+                if (status == @((short)Enums.ShoppingCartStatus.ShoppingCart)) {
+                    temp += btnConfirmOrder;
+                    temp += btnClose;
+                    temp += btnCancel;
+                }
+                if (status == @((short)Enums.ShoppingCartStatus.Checkedout)) {
+                    temp += btnConfirmOrder;
+                    temp += btnClose;
+                    temp += btnCancel;
+                }
+                if (status == @((short)Enums.ShoppingCartStatus.OrderConfirmed)) {
+                   
+                    temp += btnClose;
+                    temp += btnCancel;
+                }
+
+                return temp;
+            },
+            buildPayFunction: function (id, orderStatus, payStatus, orderCode) {
+                if (orderCode == 'undefined' || orderCode == '' || orderCode == null
+                ||orderStatus==@((short)Enums.ShoppingCartStatus.ShoppingCart)) {
+                    return '';
+                }
+                if (payStatus == @((short)Enums.ShoppingCartPayStatus.PaymentFail)) {
+                    return '';
+                }
+                if (payStatus == @((short)Enums.ShoppingCartPayStatus.PaymentSuccess)) {
+                    return '';
+                }
+                var btnSuccess = ' | <a onclick="OrderAdminPage.succesPay(\'' + orderCode + '\')">Pay success</a>';
+                var btnFail =  ' | <a onclick="OrderAdminPage.failPay(\'' + orderCode + '\')">Pay fail</a>';
+                var btnQueryDr =  ' | <a onclick="OrderAdminPage.queryDr(\'' + orderCode + '\')">QueryDr</a>';
+
+                var temp = '<br>';
+                temp += btnSuccess;
+                temp += btnFail;
+                temp += btnQueryDr;
+                return temp;
+            }
+            ,
+            refresh: function () {
+                OrderAdminPage._$tblView.bootstrapTable('refresh');
+            },
+            closeOrder: function(id) {
+                bootbox.confirm('Do you want to CLOSE ORDER?',
+                    function(result) {
+                        if (!result) return;
+
+                        $.post('/Admin/AdminOrder/AdminCloseOrder',
+                                {
+                                    id: id
+                                })
+                            .done(function(data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                    OrderAdminPage.refresh();
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function() {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+                    });
+            }
+            ,
+            confirmOrder: function (id) {
+                bootbox.confirm('Do you want to CONFIRM ORDER?',
+                    function (result) {
+                        if (!result) return;
+
+                        $.post('/Admin/AdminOrder/AdminConfirmOrder',
+                            {
+                                id: id
+                            })
+                            .done(function (data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                    OrderAdminPage.refresh();
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function () {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+                    });
+            }
+            ,
+            cancelOrder: function(id) {
+                bootbox.confirm('Do you want to CANCEL ORDER?',
+                    function(result) {
+                        if (!result) return;
+
+                        $.post('/Admin/AdminOrder/AdminCancelOrder',
+                                {
+                                    id: id
+                                })
+                            .done(function(data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                    OrderAdminPage.refresh();
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function() {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+                    });
+            }
+            ,
+            succesPay: function(orderCode) {
+                bootbox.confirm('Do you want to change order to PAY SUCCESS?',
+                    function(result) {
+                        if (!result) return;
+
+                        $.post('/Admin/AdminOrder/AdminConfirmPaySuccess',
+                                {
+                                    orderCode: orderCode
+                                })
+                            .done(function(data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                    OrderAdminPage.refresh();
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function() {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+                    });
+            }
+            ,
+            failPay: function(orderCode) {
+                bootbox.confirm('Do you want to change order to PAY FAIL?',
+                    function(result) {
+                        if (!result) return;
+
+                        $.post('/Admin/AdminOrder/AdminConfirmPayFail',
+                                {
+                                    orderCode: orderCode
+                                })
+                            .done(function(data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                    OrderAdminPage.refresh();
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function() {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+                    });
+            }
+            ,
+            queryDr: function (orderCode) {
+                bootbox.confirm('Check STATUS from Payment gateway?',
+                    function (result) {
+                        if (!result) return;
+
+                        $.post('/Admin/AdminOrder/QueryDr',
+                            {
+                                orderCode: orderCode
+                            })
+                            .done(function (data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                    OrderAdminPage.refresh();
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function () {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+                    });
+            }
+        }
+
+        OrderAdminPage.init($('#tblView'), $('#txtSearchOrder') ,$('#txtSearchProduct'));
+    </script>
+}

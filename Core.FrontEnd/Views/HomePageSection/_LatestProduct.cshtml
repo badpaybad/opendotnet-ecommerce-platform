@@ -1,0 +1,28 @@
+﻿@using DomainDrivenDesign.Core
+@model Core.FrontEnd.Models.FeHomePage.Section
+@{
+    Layout = null;
+    var products = Model.Data.Products;
+    var currencyCode = EngineeCurrentContext.GetCurrencyCode();
+    var exchangeRate = EngineeCurrentContext.GetCurrencyExchangeRate();
+}
+
+<h2>@Model.Title</h2>
+<div class="row">
+    @foreach (var p in products)
+    {
+        <div class="col-lg-4 col-sm-6 portfolio-item">
+            <div class="card h-100">
+                <a href="/product/@p.SeoUrlFriendly"><img class="card-img-top" src="@p.UrlImage" alt="@p.SeoUrlFriendly"></a>
+                <div class="card-body">
+                    <h4 class="card-title">
+                        <a href="/product/@p.SeoUrlFriendly">[@p.ProductCode] @p.Title (@(p.Price * exchangeRate) @currencyCode)</a>
+                    </h4>
+                    <p class="card-text">
+                        @p.ShortDescription
+                    </p>
+                </div>
+            </div>
+        </div>
+    }
+</div>

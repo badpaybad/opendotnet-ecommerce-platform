@@ -1,0 +1,117 @@
+﻿@using DomainDrivenDesign.Core
+@model Core.FrontEnd.Models.FeSearchPage
+@{
+    ViewBag.Title = "Search product";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section head
+{
+    <link href="/assets/bootstraptable/bootstrap-table.css" rel="stylesheet" />
+}
+
+<h2>Search product</h2>
+
+<div class="form-group">
+    <div class="input-group input-group-sm">
+        <input id="txtSearch" value="@Model.Keywords" class="form-control" placeholder="type keywords to search" />
+
+        <span class="input-group-btn">
+            <button class="btn green" type="button" onclick="ProductSearch.refresh()">Search</button>
+        </span>
+    </div>
+
+</div>
+<div class="copa-search-result">
+    <table id="tblView"></table>
+</div>
+
+
+@section scripts
+{
+    <script src="/assets/bootstraptable/bootstrap-table.js"></script>
+    <script src="/assets/bootstraptable/bootstrap-table-filter.js"></script>
+    <script>
+        ProductSearch= {
+            _$tblView: null,
+            _currencyCode:'@EngineeCurrentContext.GetCurrencyCode()',
+            _guidEmpty: '@Guid.Empty.ToString()',
+            _$txtSearch: null,
+            init: function($tblView, $txtSearch) {
+
+                ProductSearch._$tblView = $tblView;
+                ProductSearch._$txtSearch = $txtSearch;
+                ProductSearch.initTable();
+
+                $(ProductSearch._$txtSearch).on("keyup",function(e) {
+                    if ( e.which == 13 ) {
+                        ProductSearch.refresh();
+                    }
+                });
+            }
+            ,
+            initTable: function() {
+                ProductSearch._$tblView.bootstrapTable({
+                    idField: 'Id',
+                    method: 'post',
+                    url: '/ProductSearch/ListResult?__=' + (new Date().getTime()),
+                    sidePagination: 'server',
+                    pagination: true,
+                    showToggle: false,
+                    minimumCountColumns: 1,
+                    pageSize: 10,
+                    pageList: [10, 20, 50, 100, 200],
+                    showColumns: false,
+                    showRefresh: false,
+                    sortName: 'CreatedDate',
+                    sortOrder: 'desc',
+                    queryParams: function(p) {
+                        var keywords = '';
+                        if (ProductSearch._$txtSearch) {
+                            keywords = ProductSearch._$txtSearch.val();
+                        }
+                        return {
+                            sortField: p.sort,
+                            orderBy: p.order,
+                            take: p.limit,
+                            skip: p.offset,
+                            keywords: keywords
+                        };
+                    },
+                    columns: [
+                        {
+                            field: 'UrlImage',
+                            title: '',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function(value, row) {
+                                return '<a href="/product/' + row.SeoUrlFriendly+'">' +
+                                    '<img src="' + row.UrlImage + '" id="'+row.Id+'"/></a>';
+                                
+                            },
+                            width:90
+                        },
+                        {
+                            field: 'Title',
+                            title: 'Title',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function(value, row) {
+                                return '<a href="/product/' + row.SeoUrlFriendly + '"><i>[' + row.ProductCode+'] ' + row.Title + '</i></a> ('
+                                    + row.Price + ' ' + ProductSearch._currencyCode +'), Quantity: '+row.Quantity
+                                    +'<div>' + row.ShortDescription+'</div>';
+                            }
+                        }
+                    ]
+                });
+
+            }
+            ,
+            refresh: function () {
+                ProductSearch._$tblView.bootstrapTable('refresh');
+            }
+        }
+
+        ProductSearch.init($('#tblView'),$('#txtSearch'));
+    </script>
+}

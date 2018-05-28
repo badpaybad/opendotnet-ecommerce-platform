@@ -1,0 +1,197 @@
+﻿@using DomainDrivenDesign.Core.Utils
+@model dynamic
+
+@{
+    ViewBag.Title = "Event-Stream";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Event-Stream</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <label>Publish event</label>
+        <div>
+            <div>EventName:<br/> <input id="eventName" placeholder="event name" value="pingTest" readonly="readonly"/></div>
+            <div>EventData:<br/> <input id="eventData" placeholder="event data"/></div>
+        </div>
+        <div>
+            <button id="btnSubmmit">Publish</button>
+        </div>
+      
+    </div>
+    <div class="col-md-6">
+        <label>Result</label>
+        <div id="result"></div>
+      
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">     <br />
+        <pre class="language-javascript"><code> &lt;script&gt;
+        EventStream= {
+            init: function () {
+                $('#btnSubmmit').on('click',
+                    function() {
+                        EventStream.publish();
+                    });
+
+                var source = new EventSource("@HttpHelper.GetRootWeb()/EventStream/Subscribe?eventName=pingTest");
+                source.onmessage = function (event) {
+                    if (event.data != null &amp;&amp; event.data != '' &amp;&amp; event.data != 'undefined') {
+                        document.getElementById("result").innerHTML += event.data + "&lt;br&gt;";
+                    }
+                }; 
+            },
+            publish:function() {
+                $.post('/EventStream/Publish', { eventName: 'pingTest', eventData:$('#eventData').val()})
+                    .done(function(data) {
+                        if (data.Ok) {
+                            console.log(data);
+                        } else {
+                            alert(data.Message);
+                        }
+                    }).fail(function() {
+                        alert("Error. can not process");
+                    });
+            }
+        }
+
+        EventStream.init();
+
+        /*source.addEventListener('message', function(e) {
+  console.log(e.data);
+}, false);
+
+source.addEventListener('open', function(e) {
+  // Connection was opened.
+}, false);
+
+source.addEventListener('error', function(e) {
+  if (e.readyState == EventSource.CLOSED) {
+    // Connection was closed.
+  }
+}, false);*/
+    &lt;/script&gt;​</code></pre></div>
+    <div class="col-md-6">   <br />
+        <pre class="language-csharp"><code> public class EventStreamController : Controller
+    {
+        static ConcurrentDictionary&lt;string, ConcurrentQueue&lt;string&gt;&gt; _eventDatas = new ConcurrentDictionary&lt;string, ConcurrentQueue&lt;string&gt;&gt;();
+
+        public static void Push(string eventName, string data)
+        {
+            ConcurrentQueue&lt;string&gt; queue;
+            if (_eventDatas.TryGetValue(eventName, out queue) &amp;&amp; queue != null)
+            {
+                queue.Enqueue(data);
+            }
+            else
+            {
+                var concurrentQueue = new ConcurrentQueue&lt;string&gt;();
+                concurrentQueue.Enqueue(data);
+                _eventDatas[eventName] = concurrentQueue;
+            }
+        }
+        
+        public  async Task  Subscribe(string eventName)
+        {
+            Response.ContentType = "text/event-stream";
+            Response.Expires = -1;
+            while (true)
+            {
+                try
+                {
+                    ConcurrentQueue&lt;string&gt; queue;
+                    if (_eventDatas.TryGetValue(eventName, out queue))
+                    {
+                        string data;
+                        if (queue.TryDequeue(out data))
+                        {
+                            try
+                            {
+                                Response.Write("data:" + data);
+                                Response.Write("\n\n");
+                                Response.Flush();
+                            }
+                            catch
+                            {
+                                //handle error: try enqueue to send again
+                                Push(eventName,data);
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    //Thread.Sleep(1000);
+                    await Task.Delay(1000);
+                }
+            }
+        }
+
+        [HttpPost]
+        public JsonResult Publish(string eventName, string eventData)
+        {
+            Push(eventName, eventData);
+
+            return  Json( new { Ok = true }, JsonRequestBehavior.AllowGet );
+        }
+
+        public ActionResult Index()
+        {
+            return View();
+        }
+
+    }​</code></pre></div>
+</div>
+
+@section scripts{
+    @*<!--[if IE EDGE]>
+    <script src="/Scripts/EventSource.js"></script>
+    <![endif]-->*@
+    <script>
+        EventStream= {
+            init: function () {
+                $('#btnSubmmit').on('click',
+                    function() {
+                        EventStream.publish();
+                    });
+
+                var source = new EventSource("@HttpHelper.GetRootWeb()/EventStream/Subscribe?eventName=pingTest");
+                source.onmessage = function (event) {
+                    if (event.data != null && event.data != '' && event.data != 'undefined') {
+                        document.getElementById("result").innerHTML += event.data + "<br>";
+                    }
+                }; 
+            },
+            publish:function() {
+                $.post('/EventStream/Publish?__=' + new Date().getTime(), { eventName: 'pingTest', eventData:$('#eventData').val()})
+                    .done(function(data) {
+                        if (data.Ok) {
+                            console.log(data);
+                        } else {
+                            alert(data.Message);
+                        }
+                    }).fail(function() {
+                        alert("Error. can not process");
+                    });
+            }
+        }
+
+        EventStream.init();
+
+        /*source.addEventListener('message', function(e) {
+  console.log(e.data);
+}, false);
+
+source.addEventListener('open', function(e) {
+  // Connection was opened.
+}, false);
+
+source.addEventListener('error', function(e) {
+  if (e.readyState == EventSource.CLOSED) {
+    // Connection was closed.
+  }
+}, false);*/
+    </script>
+}

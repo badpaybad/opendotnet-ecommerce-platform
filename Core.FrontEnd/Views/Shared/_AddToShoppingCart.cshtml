@@ -1,0 +1,11 @@
+﻿@model Core.FrontEnd.Models.FeShoppingCartPage.Item
+<div class="shopping-cart-bound-button-add">
+    <input type="text" id='productAddQuantity-@Model.ProductId-@Model.Quantity'
+           class="shopping-cart-quantity" placeholder="quantity" value="@Model.Quantity">
+    <span class="">
+        <button class="shopping-cart-button-add" type="button"
+                onclick="ShoppingCart.addProduct('@Model.ProductId',$('#productAddQuantity-@Model.ProductId-@Model.Quantity').val(),'@Model.Title')" 
+        >Add</button>
+    </span>
+    <a href="/ShoppingCart/Index" title="goto cart"> (<span class="current-cat-quanity"></span>) &gt;&gt;<span class="fa fa-shopping-cart" >&nbsp;</span></a>
+</div>

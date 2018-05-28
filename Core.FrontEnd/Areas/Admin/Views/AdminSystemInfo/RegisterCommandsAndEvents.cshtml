@@ -1,0 +1,43 @@
+﻿@model Core.FrontEnd.Areas.Admin.Models.AdminSystemInfoPage
+@{
+    ViewBag.Title = "RegisterCommandsAndEvents";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Registered CommandsAndEvents</h2>
+<button onclick="CommandEventMangager.registerAuto()">Re-auto-register</button>
+<div>Commands</div>
+@foreach (var c in Model.Commands)
+{
+    <div>- @c</div>
+}
+<div>Events</div>
+@foreach (var e in Model.Events)
+{
+    <div>- @e</div>
+}
+
+@section scripts{
+    <script>
+        CommandEventMangager = {
+            registerAuto: function () {
+                var data={
+                };
+                $.post('/Admin/AdminSystemInfo/RegisterCommandsAndEventsAuto', data)
+                    .done(function(data) {
+                        if (data.Ok) {
+                            toastr.success(data.Message);
+                            window.location = '/Admin/AdminSystemInfo/RegisterCommandsAndEvents/';
+                        } else {
+                            toastr.error(data.Message);
+                        }
+                    }).fail(function() {
+                        bootbox.alert({
+                            message: "Can not make request, check your internet and try to reload page",
+                            backdrop: true
+                        });
+                    });
+            }
+        }
+    </script>
+}

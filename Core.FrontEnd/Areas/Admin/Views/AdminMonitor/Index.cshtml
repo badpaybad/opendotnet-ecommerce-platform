@@ -1,0 +1,145 @@
+﻿@using DomainDrivenDesign.Core
+@model dynamic
+
+@{
+    ViewBag.Title = "Monitor";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    var lang = EngineeCurrentContext.GetCurrentLanguage();
+    var currencyCode = lang.CurrencyCode;
+    var paySuccess = (short) Enums.ShoppingCartPayStatus.PaymentSuccess;
+    var orderConfirmed = (short) Enums.ShoppingCartStatus.OrderConfirmed;
+    var today = DateTime.Now.ToString("yyyy-MM-dd");
+}
+
+<h2>Live Monitoring</h2>
+<button onclick="AdminMonitor.refresh()">Refresh</button>
+<table id="tblView"></table>
+
+@section scripts{
+    <script>
+        AdminMonitor = {
+            init: function() {
+                AdminMonitor.initTable();
+
+                __systemHandles["MonitorBroadCastMessage"] = function (dataJson) {
+                    switch (dataJson.type) {
+                        case "refreshList":
+                            toastr.success(dataJson.orderCode);
+                            AdminMonitor.refresh();
+                        break;
+                        case "confirmedOrder":
+                            toastr.success("order waiting to pay: "+ dataJson.orderCode);
+                            break;
+                    default:
+
+                        break;
+                    }
+
+                }
+            },
+            initTable: function() {
+                $('#tblView').bootstrapTable({
+                    idField: 'Id',
+                    method: 'post',
+                    url: '/Admin/AdminOrder/List?__=' + (new Date().getTime()),
+                    sidePagination: 'server',
+                    pagination: true,
+                    showToggle: false,
+                    minimumCountColumns: 1,
+                    pageSize: 10,
+                    pageList: [10, 20, 50, 100, 200],
+                    showColumns: false,
+                    showRefresh: false,
+                    sortName: 'ReceivingTime',
+                    sortOrder: 'desc',
+                    queryParams: function(p) {
+                        return {
+                            sortField: p.sort,
+                            orderBy: p.order,
+                            take: p.limit,
+                            skip: p.offset,
+                            orderKeywords: '',
+                            productKeywords: '',
+                            fromDate: '',
+                            toDate: '',
+                            rtFromDate: '@today',
+                            rtToDate: '@today',
+                            orderStatus: @orderConfirmed,
+                            payStatus:  @paySuccess
+                        };
+                    }
+                    ,
+                    onPostBody: function (data) {
+                        $('.detail-list-item').each(function() {
+                            AdminMonitor.detail($(this).attr('data-code'));
+                        });
+
+                    },
+                    columns: [
+                        {
+                            field: 'OrderCode',
+                            title: 'OrderCode',
+                            align: 'left',
+                            valign: 'middle',
+                            width:500,
+                            formatter: function(value, row) {
+                                var temp = value + '<div class="detail-list-item" data-code="'+value+'" id="detail-' + value + '"><div>';
+
+                                return temp;
+                            }
+                        }, {
+                            field: 'ReceivingTime',
+                            title: 'ReceivingTime',
+                            align: 'left',
+                            valign: 'middle',
+                            width:90,
+                            formatter: function(value, row) {
+                                return Util.dateTimeFromJson(value);
+                            }
+                        }, {
+                            field: 'Note',
+                            title: 'Note',
+                            align: 'left',
+                            valign: 'middle',
+
+                            formatter: function(value, row) {
+                                return value;
+                            }
+                        }
+                    ]
+                });
+
+            },
+            detail:function(orderCode) {
+                var $div = $('#detail-' + orderCode);
+                $div.html('waiting ...');
+
+                $div.load('/Admin/AdminOrder/OrderListItem/?orderCode='+orderCode+'&__=' + (new Date().getTime()));
+
+            },
+            refresh: function () {
+                $('#tblView').bootstrapTable('refresh',
+                    {
+                        url: '/Admin/AdminOrder/List?__=' + (new Date().getTime())
+                        , queryParams:function(p){ return {
+                            sortField: p.sort,
+                            orderBy: p.order,
+                            take: p.limit,
+                            skip: p.offset,
+                            orderKeywords: '',
+                            productKeywords: '',
+                            fromDate: '',
+                            toDate: '',
+                            rtFromDate: '@today',
+                            rtToDate: '@today',
+                            orderStatus: @orderConfirmed,
+                            payStatus:  @paySuccess
+                        };
+                        }
+                    });
+            }
+        }
+
+        AdminMonitor.init();
+    </script>
+}

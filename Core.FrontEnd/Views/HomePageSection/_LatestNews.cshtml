@@ -1,0 +1,24 @@
+﻿@model Core.FrontEnd.Models.FeHomePage.Section
+@{
+    Layout = null;
+    var news = Model.Data.News.Skip(0).Take(3).ToList();
+}
+<h2 class="my-4">@Model.Title</h2>
+<div class="row">
+    @foreach (var n in news)
+    {
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <h4 class="card-header">@n.Title</h4>
+                <div class="card-body">
+                    <p class="card-text">
+                        @n.ShortDescription
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <a href="/news/@n.SeoUrlFriendly" class="btn btn-primary">Read More</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>

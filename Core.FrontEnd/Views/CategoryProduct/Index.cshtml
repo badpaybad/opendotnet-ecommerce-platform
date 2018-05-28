@@ -1,0 +1,106 @@
+﻿@using Core.FrontEnd.Models
+@using DomainDrivenDesign.Core
+@model Core.FrontEnd.Models.FeCategory
+
+@{
+    ViewBag.Title = Model.Title;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var exchangeRate = EngineeCurrentContext.GetCurrencyExchangeRate();
+}
+
+@section MetaSEO
+{
+    <meta content="@Model.SeoDescription" name="description" />
+    <meta content="@Model.SeoKeywords" name="keywords" />
+}
+<h2>@Model.Title</h2>
+
+@foreach (var p in Model.Products)
+{
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <img src="@p.UrlImage" class="img-fluid rounded"/>
+                </div>
+                <div class="col-md-8">
+                    <h2 class="card-title">[@p.ProductCode] @p.Title (@(p.Price * exchangeRate) @EngineeCurrentContext.GetCurrencyCode())</h2>
+                    <p class="card-text">
+                        @p.ShortDescription
+                    </p>
+                    <a href="/Product/@p.SeoUrlFriendly" class="btn btn-primary">Read More →</a>
+                    <div>
+                        @Html.Partial("_AddToShoppingCart", new FeShoppingCartPage.Item { ProductId = p.Id, Title = p.Title,Quantity=1 })
+                    </div>
+                </div>
+            </div>
+      
+        </div>
+        <div class="card-footer text-muted">
+            Posted on @p.CreatedDate.ToString("dd, MMM yyyy")
+        </div>
+    </div>
+}
+
+
+<nav aria-label="Page navigation example">
+    <ul class="pagination">
+        <li class="page-item"><a class="page-link" href="javascript:"
+                                 onclick="Paging.goToFirst()" >|&lt;</a></li>
+        <li class="page-item"><a class="page-link" href="javascript:"
+                                 onclick="Paging.goToPrevious()" >&lt;&lt;</a></li>
+        <li class="page-item"><a class="page-link" href="javascript:"
+                                 onclick="Paging.goToNext()" >&gt;&gt;</a></li>
+        <li class="page-item"><a class="page-link" href="javascript:"
+                                 onclick="Paging.goToLast()" >&gt;|</a></li>
+    </ul>
+</nav>
+@section scripts{
+    <script>
+        Paging = {
+            lastPage:'@((Model.TotalProduct / 10)+(Model.TotalProduct % 10 > 0 ? 0 : -1))'
+            ,
+            getCurrentRoot:function() {
+                var url = window.location.href;
+                var idx = url.indexOf('?');
+                if (idx > 0) {
+                    url = url.substring(0, idx);
+                }
+                return url;
+            },
+            goToFirst:function() {
+                var url = Paging.getCurrentRoot();
+                window.location = url;
+            },
+            goToLast: function () {
+                var url = Paging.getCurrentRoot()+'?page='+Paging.lastPage;
+                window.location = url;
+            },
+            goToNext: function () {
+                var page = Util.getQueryStringValue('page');
+                if (page == '' || page==null || page=='NaN') page = 0;
+                page = parseInt(page);
+                if (page == 'NaN') page = 0;
+                page = page + 1;
+                var total = parseInt(Paging.lastPage);
+                if (page > total) {
+                    page = total;
+                }
+                var url = Paging.getCurrentRoot() + '?page=' + page;
+                window.location = url;
+            },
+            goToPrevious: function() {
+                var page = Util.getQueryStringValue('page');
+                if (page == '' || page==null || page=='NaN') page = 0;
+                page = parseInt(page);
+                if (page == 'NaN') page = 0;
+                page = page - 1;
+                if (page < 0) {
+                    page = 0;
+                }
+                var url = Paging.getCurrentRoot() + '?page=' + page;
+                window.location = url;
+            }
+        }
+    </script>
+}

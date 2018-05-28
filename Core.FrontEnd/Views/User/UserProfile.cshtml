@@ -1,0 +1,120 @@
+﻿@model Core.FrontEnd.Models.FeUserProfile
+
+@{
+    ViewBag.Title = "User Profile";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>User Profile</h2>
+<div class="row">
+    <div class="col-md-6">
+        <div class="portlet light bordered">
+            <div class="form-group">
+                <label class="control-label">Username</label>
+                <input id="username" type="text" placeholder="username" class="form-control"
+                       readonly="readonly"
+                       value="@Model.Username">
+            </div>
+            <div class="form-group">
+                <label class="control-label">Phone number</label>
+                <input id="phone" type="text" placeholder="phone number" class="form-control"
+                     
+                       value="@Model.Phone">
+            </div>
+            <div class="form-group">
+                <label class="control-label">Email</label>
+                <input id="email" type="text" placeholder="email" class="form-control"
+                     
+                       value="@Model.Email">
+            </div>
+            
+            <div class="form-actions">
+                <input class="btn btn-default" id="btnSave" type="button" value="Save"
+                       onclick="UserProfilePage.save()">
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="portlet light bordered">
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-md-9">
+                        <label class="control-label">Current password</label>
+                        <input id="old-password" type="password"
+                               placeholder="current password" class="form-control"
+                               value="">
+                    </div>
+                    <div class="col-md-9">
+                        <label class="control-label">New password</label>
+                        <input id="password" type="password"
+                               placeholder="new password" class="form-control"
+                               value="">
+                    </div>
+                    <div class="col-md-9">
+                        <label class="control-label">Retype new password</label>
+                        <input id="retype-password" type="password"
+                               placeholder="retype new password" class="form-control"
+                               value="">
+                    </div>
+                </div>
+            </div> 
+            <div class="form-actions">
+                <input class="btn btn-default" id="btnChangePassword"
+                       type="button" value="Change"
+                       onclick="UserProfilePage.changePassword()">
+            </div>
+        </div>
+    </div>
+</div>
+@section scripts
+{
+    <script>
+        UserProfilePage={
+            changePassword: function () {
+                var cfm=confirm('Do you want to change password?');
+                if (!cfm) return;
+                var data = {
+                    newPasswordRetype: $('#retype-password').val(),
+                    newPassword: $('#password').val(),
+                    oldPassword: $('#old-password').val()
+                };
+                if (data.newPassword == '' || data.oldPassword == '' || data.newPasswordRetype !=data.newPassword) {
+                    alert('Must input password, or retype-passowrd not match');
+                }
+                $.post('/User/ChangePassword',data)
+                    .done(function (data) {
+                        if (data.Ok) {
+                            alert(data.Message);
+
+                        } else {
+                            alert(data.Message);
+                        }
+                    }).fail(function () {
+                        alert("Can not make request, check your internet and try to reload page");
+                    });
+            },
+            save: function () {
+                var cfm=confirm('Do you want to Save?');
+                if (!cfm) return;
+
+                $.post('/User/SaveProfile',
+                        {
+                            password: $('#password').val(),
+                            username: $('#username').val(),
+                            phone: $('#phone').val(),
+                            email: $('#email').val(),
+                        })
+                    .done(function (data) {
+                        if (data.Ok) {
+                            alert(data.Message);
+                            
+                        } else {
+                            alert(data.Message);
+                        }
+                    }).fail(function () {
+                        alert("Can not make request, check your internet and try to reload page");
+                    });
+            }
+        }
+    </script>
+}

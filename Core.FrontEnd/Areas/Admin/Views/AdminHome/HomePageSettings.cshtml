@@ -1,0 +1,346 @@
+﻿@model Core.FrontEnd.Areas.Admin.Models.HomePageSettingsAdminPage
+
+@{
+    ViewBag.Title = "Home page settings";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Home page settings</h2>
+<div class="row">
+    <div class="col-md-8">
+        <button onclick="AdminHomePage.createNew()">Create new</button>
+        <table id="tblView"></table>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label class="control-label">Title:</label>
+            <input id="title" type="text" placeholder="section title" class="form-control">
+        </div>
+        <div class="form-group">
+            <label class="control-label">Display order:</label>
+            <input id="displayOrder" type="text" placeholder="display order" value="0" class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label class="control-label">Category:</label>
+            <span id="categoryTitle"></span> <button onclick="AdminHomePage.showTree()">...</button>
+            <input id="categoryId" type="text" placeholder="category id" class="form-control">
+            <div style="display: none" id="bound-category-tree">
+                <button onclick="AdminHomePage.hideTree()">Cancel</button>
+                <div id="category-tree" class=""></div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="category-choose-template">
+                <div class="control-label">Template ViewName:</div>
+
+                <ul class="nav navbar-nav">
+                    <li class="dropdown">
+                        <a class="nav-link dropdown-toggle" id="selectCvn" data-toggle="dropdown"
+                           aria-haspopup="true" aria-expanded="false">
+                            <span>Choose template</span>
+                            <i class="fa fa-angle-down"></i>
+                        </a>
+
+                        <div class="dropdown-menu" aria-labelledby="selectCvn">
+                            <a class="dropdown-item" href="javascript:" onclick="$('#categoryViewName').val('')">Default</a>
+                            @foreach (var cvn in Model.ListViewName)
+                            {
+                                <a class="dropdown-item" href="javascript:"
+                                   onclick="$('#viewName').val('@cvn')">@cvn</a>
+                            }
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <input id="viewName" type="text" placeholder="view name" class="form-control">
+
+        </div>
+
+        <div class="form-group">
+            <button id="btnSaveNew" onclick="AdminHomePage.save(false)"
+                    style="display: none">
+                Save new
+            </button>
+            <button id="btnSaveChange" onclick="AdminHomePage.save(true)"
+                    style="display: none">
+                Save change
+            </button>
+        </div>
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        AdminHomePage = {
+            _$tblView: null,
+            _selectedId: null,
+            init: function ($tblView) {
+                AdminHomePage._$tblView = $tblView;
+                AdminHomePage.initTable();
+                AdminHomePage.loadTree();
+            },
+            initTable: function () {
+                AdminHomePage._$tblView.bootstrapTable({
+                    idField: 'Id',
+                    //data: AdminUser.arrayCheckedIds,
+                    method: 'post',
+                    url: '/Admin/AdminHome/ListHomePageSection?__=' + (new Date().getTime()),
+                    sidePagination: 'server',
+                    pagination: true,
+                    showToggle: false,
+                    minimumCountColumns: 1,
+                    pageSize: 10,
+                    pageList: [10, 20, 50, 100, 200],
+                    showColumns: false,
+                    showRefresh: false,
+                    sortName: 'DisplayOrder',
+                    sortOrder: 'desc',
+                    queryParams: function (p) {
+                        return {
+
+                            sortField: p.sort,
+                            orderBy: p.order,
+                            take: p.limit,
+                            skip: p.offset
+                        };
+                    },
+                    columns: [
+                        {
+                            field: 'Title',
+                            title: 'Title',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return row.DisplayOrder +
+                                    '. ' + value + '<br>( ' + (row.Published ? "Published" : "Unpublished") + ') ';
+                            }
+                        }, {
+                            field: 'HomePageSectionViewName',
+                            title: 'ViewName',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value + '<br>Data build from category: ' + row.CategoryTitle;;
+                            }
+                        }, {
+                            field: 'Id',
+                            title: '',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                var temp = '  <a href="javascript:" onclick="AdminHomePage.edit(\'' + row.Id + '\')">Edit</a>';
+                                temp += ' | <a href="javascript:" onclick="AdminHomePage.delete(\'' + row.Id + '\')">Delete</a>';
+                                if (row.Published) {
+                                    temp += ' | <a href="javascript:" onclick="AdminHomePage.publish(\'' + row.Id + '\',false)">Unpublish</a>';
+                                } else {
+                                    temp += ' | <a href="javascript:" onclick="AdminHomePage.publish(\'' + row.Id + '\',true)">Publish</a>';
+                                }
+                                return temp;
+                            }
+                        }
+                    ]
+                });
+
+            },
+            refresh: function () {
+                AdminHomePage._$tblView.bootstrapTable('refresh');
+            },
+            showTree: function () {
+                $('#bound-category-tree').show();
+            },
+            hideTree: function () {
+                $('#bound-category-tree').hide();
+            },
+            createNew: function () {
+                AdminHomePage._selectedId = null;
+                $('#btnSaveNew').show();
+                $('#btnSaveChange').hide();
+
+
+                $('#categoryId').val('');
+                $('#categoryTitle').text('');
+                $('#title').val('');
+                $('#displayOrder').val('');
+                $('#viewName').val('');
+            },
+            save: function (isEdit) {
+                var msgTitle = 'Do you want to CREATE?';
+                var urlApi = '/Admin/AdminHome/CreateHomeSection';
+
+                if (isEdit) {
+                    msgTitle = 'Do you want to UPDATE?';
+                    urlApi = '/Admin/AdminHome/UpdateHomeSection';
+                }
+                var id = AdminHomePage._selectedId;
+
+                bootbox.confirm(msgTitle,
+                    function (result) {
+                        if (!result) return;
+
+                        $.post(urlApi,
+                            {
+                                id: id,
+                                title: $('#title').val(),
+                                categoryId: $('#categoryId').val(),
+                                viewName: $('#viewName').val(),
+                                displayOrder: $('#displayOrder').val()
+                            })
+                            .done(function (data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                    AdminHomePage._$tblView.bootstrapTable('refresh');
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function () {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+                    });
+            }
+            ,
+            edit: function (id) {
+
+                $.post('/Admin/AdminHome/HomePageSectionDetail',
+                    {
+                        id: id
+                    })
+                    .done(function (data) {
+                        if (data.Ok) {
+                            toastr.success(data.Message);
+
+                            $('#categoryId').val(data.Data.CategoryId);
+                            $('#categoryTitle').text(data.Data.CategoryTitle);
+                            $('#title').val(data.Data.Title);
+                            $('#displayOrder').val(data.Data.DisplayOrder);
+                            $('#viewName').val(data.Data.HomePageSectionViewName);
+
+                            AdminHomePage._selectedId = id;
+
+                            $('#btnSaveNew').hide();
+                            $('#btnSaveChange').show();
+
+                        } else {
+                            toastr.error(data.Message);
+                            AdminHomePage._selectedId = null;
+                        }
+                    }).fail(function () {
+                        bootbox.alert({
+                            message: "Can not make request, check your internet and try to reload page",
+                            backdrop: true
+                        });
+                    });
+
+            },
+            delete: function (id) {
+
+                var msgTitle = 'Do you want to DELETE?';
+
+                bootbox.confirm(msgTitle,
+                    function (result) {
+                        if (!result) return;
+
+                        $.post('/Admin/AdminHome/DeleteHomeSection',
+                            {
+                                id: id
+                            })
+                            .done(function (data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                    AdminHomePage._$tblView.bootstrapTable('refresh');
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function () {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+                    });
+
+            },
+            publish: function (id, isPublish) {
+
+                var msgTitle = 'Do you want to PUBLISH?';
+                if (isPublish != true) {
+                    msgTitle = 'Do you want to UNPUBLISH?';
+                }
+                bootbox.confirm(msgTitle,
+                    function (result) {
+                        if (!result) return;
+
+                        $.post('/Admin/AdminHome/PublishHomeSection',
+                            {
+                                id: id,
+                                isPublish: isPublish
+                            })
+                            .done(function (data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                    AdminHomePage._$tblView.bootstrapTable('refresh');
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function () {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+                    });
+
+            },
+            loadTree: function () {
+                $('#category-tree').on('changed.jstree',
+                    function (e, data) {
+                        var i, j, r = [];
+                        for (i = 0, j = data.selected.length; i < j; i++) {
+                            r.push(data.instance.get_node(data.selected[i]));
+                        }
+                        if (r.length > 0) {
+                            $('#categoryId').val(r[0].id);
+                            $('#categoryTitle').text(r[0].text);
+                            AdminHomePage.hideTree();
+                        }
+                    })
+                    .jstree({
+                        "core": {
+                            "themes": {
+                                "responsive": false
+                            },
+                            "check_callback": true,
+                            'data': {
+                                'url': function (node) {
+                                    return '/Admin/AdminHome/CategoryTree';
+                                },
+                                'data': function (node) {
+                                    return { 'id': node.id };
+                                }
+                            }
+                        },
+                        "types": {
+                            "default": {
+                                "icon": "fa fa-folder icon-state-warning icon-lg"
+                            },
+                            "root": {
+                                "icon": "fa fa-folder icon-state-warning icon-lg"
+                            },
+                            "file": {
+                                "icon": "fa fa-file icon-state-warning icon-lg"
+                            }
+                        },
+                        "plugins": ["types"]
+                    });
+            }
+
+        }
+
+        AdminHomePage.init($('#tblView'));
+    </script>
+}

@@ -1,0 +1,154 @@
+﻿@using DomainDrivenDesign.CorePermission
+@model Core.FrontEnd.Models.FeNews
+
+@{
+    ViewBag.Title = Model.Title;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var currentUser = UserSessionContext.CurrentUser();
+
+}
+@section MetaSEO
+{
+    <meta content="@Model.SeoDescription" name="description" />
+    <meta content="@Model.SeoKeywords" name="keywords" />
+}
+
+<h2>@Model.Title</h2>
+<div><img src="@Model.UrlImage" /></div>
+<strong>@Model.ShortDescription</strong>
+<div>
+    @Html.Raw(Model.Description)
+</div>
+@if (Model.AllowComment)
+{
+    <div class="row">
+        <div class="col-md-8">
+            @if (currentUser == null)
+            {
+                <div>
+                    Login to leave comment.
+                    <a href="@(UserSessionContext.UrlFrontEndLogin)?url=@HttpUtility.UrlEncode(HttpContext.Current.Request.Url.ToString())">Click here to login</a>
+                </div>
+            }
+            else
+            {
+                <table id="tblComments"></table>
+                <div class="card my-4">
+                    <h5 class="card-header">Leave a Comment:</h5>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <textarea class="form-control" rows="3" id="txtComment" placeholder="your comment"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <input class="form-control" value="@UserSessionContext.CurrentUsername()"
+                                   type="text" id="txtAuthorName" placeholder="your name" />
+                        </div>
+                        <button class="btn btn-primary" onclick="NewsComment.postComment()">Submit</button>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="col-md-4"></div>
+    </div>
+   
+}
+@section head
+{
+    @if (Model.AllowComment && currentUser!=null)
+    {
+        <link href="/assets/bootstraptable/bootstrap-table.min.css" rel="stylesheet" />
+    }
+}
+@section scripts{
+    @if (Model.AllowComment && currentUser != null)
+    {
+        <script src="/assets/bootstraptable/bootstrap-table.js"></script>
+        <script src="/assets/bootstraptable/bootstrap-table-filter.js"></script>
+        <script>
+            NewsComment= {
+                init:function() {
+                    NewsComment.initTable();
+                }
+                ,
+                postComment: function () {
+                    var data = {
+                        id: '@Model.Id',
+                        comment:$('#txtComment').val(),
+                        authorName: $('#txtAuthorName').val()
+                    };
+                    if (data.comment == '') {
+                        alert('Must input comment');
+                        return;
+                    }
+
+                    var ok=confirm('Do you want to POST COMMENT?');
+                    if (!ok) return;
+
+                    $.post('/NewsSearch/AddComent',
+                            data)
+                        .done(function(data) {
+                            if (data.Ok) {
+                                alert(data.Message);
+                                $('#txtComment').val('');
+                                NewsComment.refresh();
+                            } else {
+                                alert(data.Message);
+                            }
+                        }).fail(function() {
+                            bootbox.alert({
+                                message: "Can not make request, check your internet and try to reload page",
+                                backdrop: true
+                            });
+                        });
+                },
+                refresh: function () {
+                    $('#tblComments').bootstrapTable('refresh');
+                },
+                initTable: function() {
+                    $('#tblComments').bootstrapTable({
+                        idField: 'Id',
+                        //data: AdminUser.arrayCheckedIds,
+                        method: 'post',
+                        url: '/NewsSearch/ListComments?__=' + (new Date().getTime()),
+                        sidePagination: 'server',
+                        pagination: true,
+                        showToggle: false,
+                        minimumCountColumns: 1,
+                        pageSize: 10,
+                        pageList: [10, 20, 50, 100, 200],
+                        showColumns: false,
+                        showRefresh: false,
+                        sortName: 'CreatedDate',
+                        sortOrder: 'desc',
+                        queryParams: function(p) {
+                            return {
+                                newsId:'@Model.Id',
+                                sortField: p.sort,
+                                orderBy: p.order,
+                                take: p.limit,
+                                skip: p.offset
+                            };
+                        },
+                        columns: [
+                            {
+                                field: 'Content',
+                                title: 'Comment(s)',
+                                align: 'left',
+                                valign: 'middle',
+                                formatter: function (value, row) {
+                                    var temp = '<div class="media-body">';
+                                    temp += '<h5 class="mt-0">' + row.AuthorName + ' at ' + Util.dateTimeFromJson(row.CreatedDate) + '</h5>';
+                                    temp += row.Content;
+                                    return temp+'</div>';
+                                }
+                            }
+                        ]
+                    });
+
+                }
+            }
+
+            NewsComment.init();
+        </script>
+    }
+}

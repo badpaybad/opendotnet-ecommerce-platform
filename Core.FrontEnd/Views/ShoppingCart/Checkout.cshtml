@@ -1,0 +1,541 @@
+﻿@using DomainDrivenDesign.Core
+@model Core.FrontEnd.Models.FeShoppingCartCheckoutPage
+@{
+    ViewBag.Title = "Checkout";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var currencyCode = EngineeCurrentContext.GetCurrencyCode();
+    var exchangeRate = EngineeCurrentContext.GetCurrencyExchangeRate();
+    var defaultLang = EngineeCurrentContext.GetDefaultLanguage();
+    var currentLang = EngineeCurrentContext.GetCurrentLanguage();
+}
+
+@section head
+{
+    <link href="/assets/bootstraptable/bootstrap-table.css" rel="stylesheet" />
+    <link href="/Content/google-map.css" rel="stylesheet" />
+<link href="/Scripts/jquery.datetimepicker.min.css" rel="stylesheet" />
+}
+<h2>Checkout</h2>
+@if (Model.CartItemCount <= 0)
+{
+    <div>
+        No item to checkout, please add item to cart.
+    </div>
+}
+<div id="checkout-bound" style="@(Model.CartItemCount <= 0 ? "display:none" : string.Empty)">
+   <div id="accordion">
+        <div class="card">
+            <div class="card-header" id="headingOne">
+                <h5 class="mb-0">
+                    <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                        Shopping cart items
+                    </button>
+                </h5>
+            </div>
+
+            <div id="collapseOne" class="collapse show" aria-labelledby="headingOne">
+                <div class="card-body">
+                    <table id="tblView"></table>
+                    @if (Model.OrderPromotion.Id != Guid.Empty)
+                    {
+                        <div>
+                            @Html.Raw(Model.OrderPromotion.Description)
+                            @if (Model.OrderPromotion.FreeShip)
+                            {
+                                <div>
+                                    Free ship because your total order greater than
+                                    @(Model.OrderPromotion.AmountToDiscount * exchangeRate)@currencyCode
+                                </div>
+                            }
+                            @if (Model.OrderPromotion.DiscountAmount > 0)
+                            {
+                                <div>
+                                    Your save @(Model.OrderPromotion.DiscountAmount * exchangeRate)@currencyCode
+                                    because your total order greater than
+                                    @(Model.OrderPromotion.AmountToDiscount * exchangeRate)@currencyCode
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header" id="headingTwo">
+                <h5 class="mb-0">
+                    <button class="btn btn-link" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                        Payment and shipping
+                    </button>
+                </h5>
+            </div>
+            <div id="collapseTwo" class="collapse show" aria-labelledby="headingTwo">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div>Choose payment method</div>
+                            <input type="hidden" id="selectedPaymentMethodId" value="@Model.PaymentMethods[0].Id"/>
+                            @for (var index = 0; index < Model.PaymentMethods.Count; index++)
+                            {
+                                var p = Model.PaymentMethods[index];
+                                <div class="payment-method">
+                                    <label for="pm-@p.Id">
+                                        <input id="pm-@p.Id" type="radio" name="paymentMethod" value="@p.Id"
+                                               onclick="$('#selectedPaymentMethodId').val('@p.Id')"
+                                               @(index == 0 ? "checked=checkded" : "")/>
+                                        @p.Name
+                                    </label>
+                                    <div class="payment-description">@Html.Raw(p.Description)</div>
+                                </div>
+                            }
+                            <div class="cart-voucher">
+                                <label>Voucher: </label>
+                                <input id="voucherCode" value="" placeholder="voucher code"/>
+                                <button onclick="CheckoutPage.checkVoucherCode()">Check</button>
+                                <div id="voucherCodeMessage"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div>Choose shipping method</div>
+                            <input type="hidden" id="selectedShippingMethodId" value="@Model.ShippingMethods[0].Id"/>
+                            @for (var index = 0; index < Model.ShippingMethods.Count; index++)
+                            {
+                                var s = Model.ShippingMethods[index];
+                                <div class="shipping-method">
+                                    <label for="pm-@s.Id">
+                                        <input id="pm-@s.Id" type="radio" name="shippingMethod" value="@s.Id"
+                                               onclick="$('#selectedShippingMethodId').val('@s.Id')"
+                                               @(index == 0 ? "checked=checkded" : "")/>
+                                        @s.Name
+                                    </label>
+                                    <div class="shipping-description">@Html.Raw(s.Description)</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header" id="headingThree">
+                <h5 class="mb-0">
+                    <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                        Your contact info
+                    </button>
+                </h5>
+            </div>
+            <div id="collapseThree" class="collapse show" aria-labelledby="headingThree" data-parent="#accordion">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="controls">
+                                <label>Full Name:</label>
+                                <input type="text" class="form-control" id="name" required="" data-validation-required-message="Please enter your name.">
+                                <p class="help-block"></p>
+                            </div>
+                            <div class="controls">
+                                <label>Phone Number:</label>
+                                <input type="tel" class="form-control" id="phone" required="" data-validation-required-message="Please enter your phone number.">
+                                <div class="help-block"></div>
+                            </div>
+                            <div class="controls">
+                                <label>Email:</label>
+                                <input type="email" class="form-control" id="email" required="" data-validation-required-message="Please enter your email address.">
+                                <div class="help-block"></div>
+                            </div>
+                            <div class="controls">
+                                <label>Note:</label>
+                                <textarea class="form-control" id="message" required="" data-validation-required-message="Please enter your message" ></textarea>
+                                <div class="help-block"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="controls">
+                                <label>Receiving datetime</label>
+                                <input id="receivingTime"class="form-control" readonly="readonly" type="text" placeholder="receiving datetime"/>
+                            </div>
+                            <div class="controls">
+                                <label>Address:</label>
+                                <input id="pac-input" class="form-control" type="text" placeholder="type your address">
+                                <input id="pac-input-lat" readonly="readonly" value="21.0286234"/>
+                                <input id="pac-input-lng" readonly="readonly" value="105.8437302"/>
+                                <button onclick="CheckoutPage.estimateShippingCost()">Estimate shipping cost</button>
+                                <label id="shippingCost"></label>
+                            </div>
+                            <div id="map"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="CheckoutPage.complete()">Complete & pay order</button>
+</div>
+@section scripts
+{
+    <script src="/assets/bootstraptable/bootstrap-table.js"></script>
+    <script src="/assets/bootstraptable/bootstrap-table-filter.js"></script>
+    <script src="/Scripts/jquery.datetimepicker.full.min.js"></script>
+
+    <script>
+        CheckoutPage = {
+            _$tblView: null,
+            init: function($tblView) {
+                CheckoutPage._$tblView = $tblView;
+
+                CheckoutPage.initTable();
+
+                
+                $('#receivingTime').datetimepicker({
+                    dayOfWeekStart : 1,
+                    lang: 'en',
+                    step:15,
+                    //disabledDates:['1986/01/08','1986/01/09','1986/01/10'],
+                    minDate: +0,
+                    //minTime:'@DateTime.Now.ToString("HH:mm")',
+                    startDate:	'+@DateTime.Now.ToString("yyyy/MM/dd")'
+                });
+            },
+            initTable: function() {
+                CheckoutPage._$tblView.bootstrapTable({
+                    idField: 'ProductId',
+                    method: 'post',
+                    url: '/ShoppingCart/ListResult?__=' + (new Date().getTime()),
+                    sidePagination: 'server',
+                    pagination: false,
+                    showToggle: false,
+                    showFooter: true,
+                    minimumCountColumns: 1,
+                    pageSize: 10,
+                    pageList: [10, 20, 50, 100, 200],
+                    showColumns: false,
+                    showRefresh: false,
+                    sortName: 'CreatedDate',
+                    sortOrder: 'desc',
+                    queryParams: function(p) {
+
+                        return {
+                            id: '@Model.Id',
+                            sortField: p.sort,
+                            orderBy: p.order,
+                            take: p.limit,
+                            skip: p.offset
+                        };
+                    },
+                    columns: [
+                        {
+                            field: 'UrlImage',
+                            title: '',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                if (row.UrlImage == null) {
+                                    row.UrlImage = "/Content/imgs/no-image.png";
+                                }
+                                return '<a href="/product/' + row.SeoUrlFriendly+'">' +
+                                    '<img class="shopping-cart-item-img" src="' + row.UrlImage + '" alt="' + row.ProductCode+'" /></a>';
+
+                            },
+                            width:90
+                        },
+                        {
+                            field: 'Title',
+                            title: 'Title',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function(value, row) {
+                                var temp = '<a href="/product/' + row.SeoUrlFriendly + '"><i>[' + row.ProductCode + '] '
+                                    + row.Title + '</i></a>';
+                                if (row.PromotionDescription != null) {
+                                    temp += '<br>' + row.PromotionDescription;
+                                }
+
+                                return temp;
+                            }
+                        }
+                        ,
+                        {
+                            field: 'UnitPrice',
+                            title: 'UnitPrice',
+                            align: 'right',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                var temp = '' + (parseFloat(value) * parseFloat('@currentLang.CurrencyExchangeRate'))
+                                    + '@currentLang.CurrencyCode';//
+                                var clId = '@currentLang.Id';
+                                var dlId = '@defaultLang.Id';
+                                if (clId != dlId) {
+                                    temp +='<br>('+ value + ' @defaultLang.CurrencyCode)';
+                               }
+
+                                return temp;
+                            }
+                        }
+                        ,
+                        {
+                            field: 'Quantity',
+                            title: 'Quantity',
+                            align: 'right',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value ;
+                            },
+                            footerFormatter:function() {
+                                var temp = '<strong>SubTotal: </strong>';
+                                temp += "<br><strong>Dicount:</strong>";
+                                temp += "<br><strong>Total:</strong>";
+                                return temp;
+                            }
+                        }
+                        ,
+                        {
+                            field: 'TotalPrice',
+                            title: 'TotalPrice',
+                            align: 'right',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                var temp = '' + (parseFloat(value) * parseFloat('@currentLang.CurrencyExchangeRate'))
+                                    + '@currentLang.CurrencyCode';
+                                return temp;
+                            },
+                            footerFormatter: function (data) {
+                                var totalSum = data.reduce(function(sum, row) {
+                                    return (sum) + (row.TotalPrice) ;
+                                }, 0);
+                                var temp = '' + (parseFloat(totalSum) * parseFloat('@currentLang.CurrencyExchangeRate'))
+                                    + '@currentLang.CurrencyCode';
+                                temp += '<br>@(Model.CartDiscount* currentLang.CurrencyExchangeRate)@currentLang.CurrencyCode';
+                                temp += '<br>@(Model.CartTotal* currentLang.CurrencyExchangeRate)@currentLang.CurrencyCode';
+                                return temp;
+                            }
+                        }
+                    ]
+                });
+            },
+            complete: function () {
+                var data = {
+                    shippingMethodId:$('#selectedShippingMethodId').val(),
+                    paymentMethodId:$('#selectedPaymentMethodId').val(),
+                    addressName: $('#name').val(),
+                    phone:$('#phone').val(),
+                    email: $('#email').val(),
+                    voucherCode: $('#voucherCode').val(),
+                    receivingTime: $('#receivingTime').val(),
+                    address: $('#pac-input').val(),
+                    addressLatitude: $('#pac-input-lat').val(),
+                    addressLongitude: $('#pac-input-lng').val(),
+                    message: $('#message').val()
+                };
+                if (data.receivingTime == '') {
+                    alert('receiving time are reqired');
+                    return;
+                }
+                var dateRt = new Date(data.receivingTime);
+                if (new Date() > dateRt) {
+                    alert('receiving time must be bigger than now');
+                    return;
+                }
+                if (data.paymentMethodId == '' ||
+                    data.phone == '' ||
+                    data.email == '' ) {
+                    alert('payment method, phone, email are reqired');
+                    return;
+                }
+                if (data.shippingMethodId == '' ||
+                    data.address == '' ) {
+                    alert('shipping method, address are reqired');
+                    return;
+                }
+                if (Util.isValidEmail(data.email) == false) {
+                    alert('Invalid email');
+                    return;
+                }
+
+                Util.showWaiting();
+
+                $.post('/ShoppingCart/CompleteAndPayOrder', data)
+                    .done(function(data) {
+                        if (data.Ok) {
+
+                            window.location = "/ShoppingCart/OrderPayment/?orderCode="+data.Data.OrderCode;
+
+                        } else {
+                            Util.hideWaiting();
+                            alert(data.Message);
+                        }
+                    }).fail(function () {
+                        Util.hideWaiting();
+                        alert("Error. can not process");
+                    });
+
+            },
+            estimateShippingCost: function () {
+
+                var data = {
+                    shippingMethodId:$('#selectedShippingMethodId').val(),
+                    address: $('#pac-input').val(),
+                    addressLatitude: $('#pac-input-lat').val(),
+                    addressLongitude: $('#pac-input-lng').val()
+                };
+
+                if (data.shippingMethodId == '' ||
+                    data.address == '' ) {
+                    alert('shipping method, address are reqired');
+                    return;
+                }
+
+                $.post('/ShoppingCart/EstimateShippingCost', data)
+                    .done(function(data) {
+                        if (data.Ok) {
+                            var fee = parseFloat(data.Data.Cart.ShippingFee) * parseFloat('@currentLang.CurrencyExchangeRate');
+                            var distance = data.Data.Distance+'Km';
+
+                            $('#shippingCost').text(fee + '@currentLang.CurrencyCode' + '(' + distance+')');
+
+                        } else {
+                            alert(data.Message);
+                        }
+                    }).fail(function() {
+                        alert("Error. can not process");
+                    });
+            },
+            checkVoucherCode:function() {
+                var data = {
+                    voucherCode: $('#voucherCode').val()
+                };
+
+                if (data.voucherCode == '') {
+                    alert('voucher code are reqired');
+                    return;
+                }
+
+                $.post('/ShoppingCart/CheckVoucherCode', data)
+                    .done(function(data) {
+                        if (data.Ok) {
+                            var msg = (data.Data.VoucherValue + '@EngineeCurrentContext.GetCurrencyCode()');
+
+                            $('#voucherCodeMessage').html(msg+"<br>"+data.Data.Description);
+                        } else {
+                            alert(data.Message);
+                        }
+                    }).fail(function() {
+                        alert("Error. can not process");
+                    });
+            }
+        }
+
+        CheckoutPage.init($('#tblView'));
+    </script>
+
+    <script>
+
+        function getCurrentLocationByBrowser(showPosition) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition);
+            } else {
+
+            }
+        }
+
+        function initAutocomplete() {
+            var cancelAutoDetectLocation = false;
+            var map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 21.0286234, lng: 105.8437302 },
+                zoom: 13,
+                mapTypeId: 'roadmap'
+            });
+
+            // Create the search box and link it to the UI element.
+            var searchBox = new google.maps.places.SearchBox(document.getElementById('pac-input'));
+
+            var marker = new google.maps.Marker({
+                position: { lat: 21.0286234, lng: 105.8437302 },
+                map: map,
+                title: 'Your are here'
+            });
+
+            marker.setMap(map);
+            map.panTo(marker.position);
+
+            $('#pac-input-lat').val(marker.position.lat);
+            $('#pac-input-lng').val(marker.position.lng);
+
+            getCurrentLocationByBrowser(function (browserPosition) {
+                if (cancelAutoDetectLocation) return;
+                marker.setMap(null);
+                marker = new google.maps.Marker({
+                    map: map,
+                    title: 'Your are here',
+                    position: { lat: browserPosition.coords.latitude, lng: browserPosition.coords.longitude }
+                });
+                marker.setMap(map);
+                map.panTo(marker.position);
+                $('#pac-input-lat').val(browserPosition.coords.latitude);
+                $('#pac-input-lng').val(browserPosition.coords.longitude);
+            });
+
+            map.addListener('click', function (e) {
+                cancelAutoDetectLocation = true;
+                marker.setMap(null);
+                marker = new google.maps.Marker({
+                    map: map,
+                    title: 'Your are here',
+                    position: e.latLng
+                });
+                marker.setMap(map);
+                map.panTo(marker.position);
+                $('#pac-input-lat').val(marker.position.lat);
+                $('#pac-input-lng').val(marker.position.lng);
+            });
+
+            // Bias the SearchBox results towards current map's viewport.
+            map.addListener('bounds_changed', function () {
+                searchBox.setBounds(map.getBounds());
+            });
+
+            // Listen for the event fired when the user selects a prediction and retrieve
+            // more details for that place.
+            searchBox.addListener('places_changed', function () {
+                var places = searchBox.getPlaces();
+
+                if (places.length == 0) {
+                    return;
+                }
+                cancelAutoDetectLocation = true;
+                // Clear out the old markers.
+                marker.setMap(null);
+
+                // For each place, get the icon, name and location.
+                var bounds = new google.maps.LatLngBounds();
+                places.forEach(function (place) {
+                    if (!place.geometry) {
+                        console.log("Returned place contains no geometry");
+                        return;
+                    }
+
+                    // Create a marker for each place.
+                    marker = new google.maps.Marker({
+                        map: map,
+                        title: place.name,
+                        position: place.geometry.location
+                    });
+
+                    $('#pac-input-lat').val(marker.position.lat);
+                    $('#pac-input-lng').val(marker.position.lng);
+
+                    if (place.geometry.viewport) {
+                        // Only geocodes have viewport.
+                        bounds.union(place.geometry.viewport);
+                    } else {
+                        bounds.extend(place.geometry.location);
+                    }
+                });
+                map.fitBounds(bounds);
+            });
+        }
+    </script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=@EngineeCurrentContext.GoogleMapApiKey&libraries=places&callback=initAutocomplete"
+            async defer></script>
+}

@@ -1,0 +1,103 @@
+﻿
+@{
+    ViewBag.Title = "Dash board";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Dashboard</h2>
+<div >
+    <div>
+        <div id="orderVsCartChart"></div>
+    </div>
+    <div >
+        <div id="orderStatusPieChart"></div>
+    </div>
+    <div >
+        <div id="payStatusPieChart"></div>
+    </div>
+    <div >
+        <div id="orderShippingChart"></div>
+    </div>
+    <div >
+        <div id="orderPayStatusPieChart"></div>
+    </div>
+</div>
+
+@section scripts{
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+        google.charts.load('current', {packages: ['corechart']});
+        google.charts.setOnLoadCallback(chartInit);
+
+        function chartInit() {
+            DashBoardChart.orderStatusPieChart();
+        }
+
+        DashBoardChart = {
+            drawPieChart:function(domId, dataRow, title) {
+                // Define the chart to be drawn.
+                var dataChart = new google.visualization.DataTable();
+                dataChart.addColumn('string', 'Element');
+                dataChart.addColumn('number', 'Percentage');
+                dataChart.addRows(dataRow);
+
+                // Instantiate and draw the chart.
+                var chart = new google.visualization.PieChart(document.getElementById(domId));
+                chart.draw(dataChart, { width: 700, height: 200, legend: 'left', title: title});
+            },
+            orderStatusPieChart:function() {
+                $.post('/Admin/AdminDashboard/OrderStatusPieChart',{})
+                    .done(function (data) {
+                        if (data.Ok) {
+
+                            var order = data.Data.OrderStatus;
+                            var pay = data.Data.PayStatus;
+                            var orderpay = data.Data.OrderAndPayStatus;
+                            var ship = data.Data.ShippingStatus;
+                            var orderVsCart = data.Data.OrderVsCart;
+
+                            var dataRowOrder = [];
+                            for (var i = 0; i < order.length; i++) {
+                                dataRowOrder.push([order[i].Key,order[i].Value]);
+                            }
+
+                            var dataRowPay = [];
+                            for (var i = 0; i < pay.length; i++) {
+                                dataRowPay.push([pay[i].Key, pay[i].Value]);
+                            }
+
+                            var dataRowOrderPay = [];
+                            for (var i = 0; i < orderpay.length; i++) {
+                                dataRowOrderPay.push([orderpay[i].Key, orderpay[i].Value]);
+                            }
+
+
+                            var dataRowOrderShip = [];
+                            for (var i = 0; i < ship.length; i++) {
+                                dataRowOrderShip.push([ship[i].Key, ship[i].Value]);
+                            }
+
+                            var dataRowOrderVsCart = [];
+                            for (var i = 0; i < orderVsCart.length; i++) {
+                                dataRowOrderVsCart.push([orderVsCart[i].Key, orderVsCart[i].Value]);
+                            }
+
+                            DashBoardChart.drawPieChart('orderStatusPieChart', dataRowOrder,"Order status");
+                            DashBoardChart.drawPieChart('payStatusPieChart', dataRowPay,"Payment status");
+                            DashBoardChart.drawPieChart('orderPayStatusPieChart', dataRowOrderPay,"Status combin Order and Payment");
+                            DashBoardChart.drawPieChart('orderVsCartChart', dataRowOrderVsCart,"Order converted");
+                            DashBoardChart.drawPieChart('orderShippingChart', dataRowOrderShip,"Order Shipping status");
+
+                        } else {
+                            toastr.error(data.Message);
+                        }
+                    }).fail(function () {
+                        bootbox.alert({
+                            message: "Can not make request, check your internet and try to reload page",
+                            backdrop: true
+                        });
+                    });
+            }
+        }
+    </script>
+}

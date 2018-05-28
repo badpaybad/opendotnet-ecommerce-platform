@@ -1,0 +1,1379 @@
+﻿@using DomainDrivenDesign.Core.Utils
+@using Core.FrontEnd.Areas.Admin.Models
+@using DomainDrivenDesign.Core
+@using Newtonsoft.Json
+@model ProductEditAdminPage
+@{
+    ViewBag.Title = Model.PageMode == PageMode.Edit ? "Edit" : "Create";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    var defaultLang = EngineeCurrentContext.GetDefaultLanguage();
+    var currentLang = EngineeCurrentContext.GetCurrentLanguage();
+}
+
+<h2>@Model.Title</h2>
+
+<div>
+    <a href="/Admin/AdminProduct/Edit/?id=@Guid.Empty">Click here to create new</a>
+
+</div>
+
+<div class="portlet light bordered">
+    <div class="portlet-title">
+        <div class="caption">
+            @if (Model.PageMode == PageMode.Edit)
+            {
+                <div>Edit</div>
+                <div class="caption-desc">@Model.Title</div>
+                <div class="caption">Items is @(Model.Published ? "Published" : "Unpublished"), created at: @Model.CreatedDate.ToString("yyyy-MM-dd")</div>
+            }
+            else
+            {
+                <span>Create new</span>
+            }
+        </div>
+        <div class="actions">
+        </div>
+    </div>
+    <div class="portlet-body form">
+        <ul class="nav nav-tabs">
+            <li class="active">
+                <a href="#tab_1_1" data-toggle="tab" aria-expanded="true"> Basic </a>
+            </li>
+            @if (Model.PageMode == PageMode.Edit)
+            {
+                <li class="">
+                    <a href="#tab_1_2" data-toggle="tab" aria-expanded="false"> SEO </a>
+                </li>
+                <li class="">
+                    <a href="#tab_1_3" data-toggle="tab" aria-expanded="false"> Categories </a>
+                </li>
+                <li class="">
+                    <a href="#tab_1_4" data-toggle="tab" aria-expanded="false"> Gallery </a>
+                </li> 
+                if (Model.AllowComment)
+                {
+                    <li class="">
+                        <a href="#tab_1_5" data-toggle="tab" aria-expanded="false"> Comments </a>
+                    </li>
+                }
+                <li class="">
+                    <a href="#tab_1_6" data-toggle="tab" aria-expanded="false"> Combo </a>
+                </li> 
+                <li class="">
+                    <a href="#tab_1_7" data-toggle="tab" aria-expanded="false"> Promotion </a>
+                </li> 
+                <li class="">
+                    <a href="#tab_1_8" data-toggle="tab" aria-expanded="false"> Supplier </a>
+                </li> 
+            }
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane active" id="tab_1_1">
+                <div class="form-group">
+                    <label class="control-label">Title</label>
+                    <input id="title" type="text" placeholder="title" class="form-control"
+                           value="@Model.Title">
+                </div>
+                <div class="form-group">
+                    <label class="control-label">
+                        <input id="allowComment" type="checkbox" 
+                               @(Model.AllowComment ? "checked=checked" : string.Empty)>  Allow comment
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Code</label>
+                    <input id="productCode" type="text" placeholder="product code" class="form-control"
+                           value="@Model.ProductCode">
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Price</label>
+                    @if (defaultLang.Id != currentLang.Id)
+                    {
+                        <div>
+                            Price in Default currency code: @defaultLang.CurrencyCode for language: @defaultLang.Title<br />
+                            <input id="price" type="text" placeholder="price" class="form-control"
+                                   value="@Model.Price"> 
+                            <div>
+                                Price in Current currency code:
+                                <span id="currentPrice">@(Model.Price * currentLang.CurrencyExchangeRate)</span> @currentLang.CurrencyCode for language @currentLang.Title
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <input id="price" type="text" placeholder="price" class="form-control"
+                               value="@Model.Price">
+                    }
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Gram</label>
+                    <input id="gram" type="text" placeholder="gram" class="form-control"
+                           value="@Model.Gram">
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Calorie</label>
+                    <input id="calorie" type="text" placeholder="calorie" class="form-control"
+                           value="@Model.Calorie">
+                </div>
+                <div class="form-group">
+    <label class="control-label">Quantity</label>
+    <input id="quantity" type="text" placeholder="quantity" class="form-control"
+           value="@Model.Quantity">
+</div>
+                <div class="form-group">
+                    <div class="row">
+                        <div class="col-md-9">
+                            <label class="control-label">UrlImage (Click image or textbox to change image)</label>
+                            <input id="urlImage" type="text" placeholder="click to select image" class="form-control"
+                                   value="@Model.UrlImage" onclick="RoxyFileMan.openCustomRoxy('newUrlImage', 'urlImage')">
+
+                        </div>
+                        <div class="col-md-3">
+                            <label class="control-label">&nbsp;</label>
+                            <img style="height: 40px" src="@Model.UrlImage" id="newUrlImage" title="click to change image"
+                                 onclick="RoxyFileMan.openCustomRoxy('newUrlImage', 'urlImage')" />
+                        </div>
+                    </div>
+
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Short description</label>
+                    <textarea id="shortDescription" type="text" placeholder="short description" class="form-control">@Model.ShortDescription</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Description</label>
+                    <div>
+                        Insert Google map use Media -> Embed with code iframe from this link: <a href="https://developers.google.com/maps/documentation/embed/start">build map</a>
+                    </div>
+                    <textarea id="description" type="text" placeholder="description" class="text-editor">@Model.Description</textarea>
+                </div>
+                <input id="id" type="hidden" value="@Model.Id" />
+
+                <div class="form-actions">
+                    @if (Model.PageMode == PageMode.Create)
+                    {
+                        <input class="btn btn-default" id="btnSave" type="button" value="Save new"
+                               onclick="ProductEditPage.save()">
+                    }
+                    else
+                    {<input class="btn btn-default" id="btnSave" type="button" value="Save"
+                            onclick="ProductEditPage.save()">
+
+                        <input class="btn btn-default" id="btnDelete" type="button" value="Delete"
+                               onclick="ProductEditPage.delete()">
+
+                        <input class="btn btn-default" id="btnPublish" type="button" value="Publish"
+                               onclick="ProductEditPage.publish(true)">
+
+                        <input class="btn btn-default" id="btnUnpublish" type="button" value="Unpublish"
+                               onclick="ProductEditPage.publish(false)">
+                    }
+                </div>
+            </div>
+            @if (Model.PageMode == PageMode.Edit)
+            {
+                <div class="tab-pane" id="tab_1_2">
+                    <div class="form-group">
+                        <label class="control-label">Keywords</label>
+                        <input id="seoKeywords" type="text" placeholder="seo keywords" class="form-control"
+                               value="@Model.SeoKeywords">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">Description</label>
+                        <input id="seoDescription" type="text" placeholder="seo description" class="form-control"
+                               value="@Model.SeoDescription">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">Url friendly (leave empty to use title)</label>
+                        <input id="seoUrlFriendly" type="text" placeholder="seo url friendly" class="form-control"
+                               value="@Model.SeoUrlFriendly">
+                    </div>
+
+                    <div class="form-actions">
+                        <input class="btn btn-default" id="btnSaveSeo" type="button" value="Save"
+                               onclick="ProductEditPage.saveSeo()">
+
+                    </div>
+                </div>
+
+                <div class="tab-pane" id="tab_1_3">
+
+                    <div id="checkbox-category-tree" class="checkbox-category-tree"></div>
+
+                    <div class="form-actions">
+                        <input class="btn btn-default" id="btnSaveCategories" type="button" value="Save"
+                               onclick="ProductEditPage.saveCategories()">
+
+                    </div>
+                </div>
+
+
+                <div class="tab-pane" id="tab_1_4">
+
+                    <div class="form-group">
+                        <label class="control-label">UrlImage (Click into textbox to chose image)</label>
+                        <div class="row">
+                            <div class="col-md-9">
+                                <input id="urlImageGlr" type="text" placeholder="click to select image" class="form-control"
+                                       value="" onclick="RoxyFileMan.openCustomRoxy(null, 'urlImageGlr')">
+                            </div>
+                            <div class="col-md-3">
+                                <button id="btnAddImgGlr" onclick="ProductImageGallery.add()">Add</button>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div>
+                        <button onclick="ProductImageGallery.removeSelected()">Remove selected</button>
+                    </div>
+                    <div>
+                        <table id="tblImgGallery"></table>
+                    </div>
+                </div>
+                if (Model.AllowComment)
+                {
+                    <div class="tab-pane" id="tab_1_5">
+                        <table id="tblComments"></table>
+                        <div>
+                            <textarea id="txtComment" style="width:80%"></textarea><br />
+                            <button onclick="ProductComment.postComment()">Post comment</button>
+                        </div>
+                    </div>
+                }
+
+                <div class="tab-pane" id="tab_1_6">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div>Product(s) in combo</div>
+                            <table id="tblProductInCombo"></table>
+                            <div>
+                                <button onclick="ProductList.saveCombo()">Save combo</button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div>Search product for combo</div>
+                            <div class="search-area">
+                                <ul class="navbar-nav mr-auto">
+                                    <li class="nav-item dropdown">
+                                        <button id="navbarDropdown"
+                                                role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                                onclick="AdminCategoryCheckboxTree.showTree()">
+                                            Choose categories
+                                        </button>
+                                        <div class="dropdown-menu" aria-labelledby="navbarDropdown"
+                                             style="display: none" id="bound-category-tree">
+                                            <button onclick="AdminCategoryCheckboxTree.checkAll()">Check all</button>
+                                            <button onclick="AdminCategoryCheckboxTree.clearAllChecked()">Clear all checked</button>
+                                            <button onclick="AdminCategoryCheckboxTree.hideTree()">Hide</button>
+                                            <div id="category-tree" class=""></div>
+                                        </div>
+                                    </li>
+                                </ul>
+                                <input id="txtSearch" value="" placeholder="type keywords to search" />
+                                <button type="button" onclick="ProductList.refresh()">Search</button>
+                            </div>
+                            <table id="tblView"></table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane" id="tab_1_7">
+                    <table id="tblPromotion"></table>
+                    <div>
+                        <button onclick="ProductPromotion.save(true)">Save checked</button>
+                    </div>
+                </div>
+
+                <div class="tab-pane" id="tab_1_8">
+                    <table id="tblSupplier"></table>
+                    <div>
+                        <button onclick="ProductSupplier.save(true)">Save checked</button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+@section scripts
+{
+    <script>
+        ProductEditPage = {
+            _checkBoxTree: null,
+            _$checkBoxTree: null,
+            init: function ($checkBoxTree) {
+                ProductEditPage._$checkBoxTree = $checkBoxTree;
+                ProductEditPage.loadTree();
+                $('#price').on("keyup", function () {
+                    var price = parseFloat($('#price').val()) * parseFloat('@currentLang.CurrencyExchangeRate');
+                    $('#currentPrice').text(price);
+                });
+            },
+
+            loadTree: function () {
+                var checkedOnload = @Html.Raw(JsonConvert.SerializeObject(@Model.ProductCategoies));
+                ProductEditPage._checkBoxTree = ProductEditPage._$checkBoxTree
+                    .on('select_node.jstree', function (e, data) {
+                        if (data.event) {
+                            data.instance.select_node(data.node.children_d);
+                        }
+                    })
+                    .on('deselect_node.jstree', function (e, data) {
+                        if (data.event) {
+                            data.instance.deselect_node(data.node.children_d);
+                        }
+                    })
+                    .jstree({
+                        "core": {
+                            "themes": {
+                                "responsive": false
+                            },
+                            "check_callback": true,
+                            'data': {
+                                'url': function(node) {
+                                    return '/Admin/AdminProduct/CategoryTree?checkedOnload=' + encodeURIComponent(checkedOnload);
+                                },
+                                'data': function(node) {
+                                    return { 'id': node.id };
+                                }
+                            }
+                        },
+                        "types": {
+                            "default": {
+                                "icon": "fa fa-folder icon-state-warning icon-lg"
+                            },
+                            "root": {
+                                "icon": "fa fa-folder icon-state-warning icon-lg"
+                            },
+                            "file": {
+                                "icon": "fa fa-file icon-state-warning icon-lg"
+                            }
+                        },
+                        "plugins": ["checkbox", "types"],
+                        checkbox: {
+                            cascade: "", three_state: false
+                        }
+                        ,expand_selected_onload: true
+                    });
+            }
+            ,
+            save: function() {
+                var data = {
+
+                    id: '@Model.Id',
+                    title: $('#title').val(),
+                    productCode: $('#productCode').val(),
+                    allowComment: $('#allowComment').prop('checked'),
+                    price: $('#price').val(),
+                    quantity: $('#quantity').val(),
+                    gram: $('#gram').val(),
+                    calorie: $('#calorie').val(),
+                    urlImage: $('#urlImage').val(),
+                    shortDescription: $('#shortDescription').val(),
+                    description: tinymce.get('description').getContent(),
+                    isSaveNew: @(Model.PageMode == PageMode.Create ? "true" : "false")
+                };
+
+                $.post('/Admin/AdminProduct/Save', data)
+                    .done(function(data) {
+                        if (data.Ok) {
+                            toastr.success(data.Message);
+                            window.location = '/Admin/AdminProduct/Edit/?id=' +
+                                data.Data.Id;
+                        } else {
+                            toastr.error(data.Message);
+                        }
+                    }).fail(function() {
+                        bootbox.alert({
+                            message: "Can not make request, check your internet and try to reload page",
+                            backdrop: true
+                        });
+                    });
+            },
+            delete: function() {
+                bootbox.confirm('Do you want to DELETE?',
+                    function(result) {
+                        if (!result) return;
+
+                        $.post('/Admin/AdminProduct/Delete',
+                                {
+                                    id: '@Model.Id'
+                                })
+                            .done(function(data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                    window.location = '/Admin/AdminProduct/Index/';
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function() {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+                    });
+
+            },
+            publish: function (isPublish) {
+                var msgTitle = 'Do you want to PUBLISH?';
+                if (isPublish != true) {
+                    msgTitle = 'Do you want to UNPUBLISH?';
+                }
+                bootbox.confirm(msgTitle,
+                    function(result) {
+                        if (!result) return;
+
+                        $.post('/Admin/AdminProduct/Publish',
+                                {
+                                    id: '@Model.Id',
+                                    isPublish: isPublish
+                                })
+                            .done(function(data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                    window.location = '/Admin/AdminProduct/Index/';
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function() {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+                    });
+
+            }
+            @if (Model.PageMode == PageMode.Edit)
+            {
+                <text>
+            ,
+            saveCategories: function() {
+                var checkedIds = [];
+
+                var arrChecked = ProductEditPage._$checkBoxTree.jstree("get_checked",null, true);
+
+                for (var i = 0; i < arrChecked.length; i++) {
+                    checkedIds.push(arrChecked[i]);
+                }
+
+                var data = {
+                    id:'@Model.Id',
+                    categoryIds: checkedIds
+                };
+
+                $.post('/Admin/AdminProduct/SaveCategories', data)
+                    .done(function(data) {
+                        if (data.Ok) {
+                            toastr.success(data.Message);
+                            window.location = '/Admin/AdminProduct/Edit/?id=' + data.Data.Id;
+
+                        } else {
+                            toastr.error(data.Message);
+                        }
+                    }).fail(function() {
+                        bootbox.alert({
+                            message: "Can not make request, check your internet and try to reload page",
+                            backdrop: true
+                        });
+                    });
+
+            }
+            ,
+            saveSeo: function() {
+                var data = {
+                    id: '@Model.Id',
+                    seoUrlFriendly: $('#seoUrlFriendly').val(),
+                    seoKeywords: $('#seoKeywords').val(),
+                    seoDescription: $('#seoDescription').val()
+                };
+
+                $.post('/Admin/AdminProduct/SaveSeo', data)
+                    .done(function(data) {
+                        if (data.Ok) {
+                            toastr.success(data.Message);
+
+                        } else {
+                            toastr.error(data.Message);
+                        }
+                    }).fail(function() {
+                        bootbox.alert({
+                            message: "Can not make request, check your internet and try to reload page",
+                            backdrop: true
+                        });
+                    });
+            }
+                </text>
+            }
+
+        }
+
+        ProductEditPage.init($('#checkbox-category-tree'));
+
+    </script>
+
+    @if (Model.PageMode != PageMode.Create)
+    {
+        <script>
+            ProductImageGallery = {
+                _imgData: @Html.Raw(JsonConvert.SerializeObject(Model.Galleries)),
+                _imgSelected: [],
+                tblImgGallery: null,
+                init: function ($tblImgGallery) {
+                    ProductImageGallery.$tblImgGallery = $tblImgGallery;
+
+                    ProductImageGallery.$tblImgGallery.bootstrapTable({
+                        idField: 'Id',
+                        data: ProductImageGallery._imgData,
+                        pagination: true,
+                        showToggle: false,
+                        minimumCountColumns: 1,
+                        pageSize: 10,
+                        pageList: [10, 20, 50, 100, 200],
+                        showColumns: false,
+                        showRefresh: false,
+                        sortName: 'DisplayOrder',
+                        sortOrder: 'desc',
+                        columns: [
+                            {
+                                field: 'Id',
+                                title: '',
+                                align: 'left',
+                                valign: 'middle',
+                                width: 40,
+                                checkbox: true
+                            },
+                            {
+                                field: 'UrlImage',
+                                title: 'UrlImage',
+                                align: 'left',
+                                valign: 'middle',
+                                sortable: true,
+                                width: 90,
+                                formatter: function (value, row) {
+                                    return '<img src="' + value + '" style="width:100%"/>';
+                                }
+                            }
+                            ,
+                            {
+                                field: 'UrlImage',
+                                title: 'UrlImage',
+                                align: 'left',
+                                valign: 'middle',
+                                sortable: true,
+                                formatter: function (value, row) {
+                                    return '<a href="' + value + '" target="_blank">' + value + '</a>';;
+                                }
+                            }
+
+                        ],
+                        onCheckAll: function (rows) {
+                            ProductImageGallery._imgSelected = [];
+                            $.each(rows, function (index, value) {
+                                ProductImageGallery._imgSelected.push(value);
+                            });
+                        },
+                        onUncheckAll: function (rows) {
+                            ProductImageGallery._imgSelected = [];
+                        },
+                        onCheck: function (row) {
+                            var existed = false;
+                            $.each(ProductImageGallery._imgSelected, function (index, value) {
+                                if (value.UrlImage == row.UrlImage) {
+                                    existed = true;
+                                }
+                            });
+                            if (!existed) {
+                                ProductImageGallery._imgSelected.push(row);
+                            }
+                        },
+                        onUncheck: function (row) {
+                            $.each(ProductImageGallery._imgSelected, function (index, value) {
+                                if (value.UrlImage == row.UrlImage) {
+                                    ProductImageGallery._imgSelected.splice(index, 1);
+                                }
+                            });
+                        }
+                    });
+
+                }
+                , add: function () {
+                    var urlImageGlr = $('#urlImageGlr').val();
+                    var arrImg = [];
+                    arrImg.push(urlImageGlr);
+
+                    var data = {
+                        id:'@Model.Id'
+                        , urlImgs: arrImg
+                    };
+                    $.post('/Admin/AdminProduct/AddImages', data)
+                        .done(function(data) {
+                            if (data.Ok) {
+                                toastr.success(data.Message);
+
+                                ProductImageGallery._imgData.push({ UrlImage: urlImageGlr });
+
+                                ProductImageGallery.$tblImgGallery.bootstrapTable('load', ProductImageGallery._imgData);
+                          
+                            } else {
+                                toastr.error(data.Message);
+                            }
+                        }).fail(function() {
+                            bootbox.alert({
+                                message: "Can not make request, check your internet and try to reload page",
+                                backdrop: true
+                            });
+                        });
+
+                  
+                }
+                , removeSelected: function () {
+                    var arrImg = [];
+                    $.each(ProductImageGallery._imgSelected, function (idx, valx) {
+                        arrImg.push(valx.UrlImage);
+                    });
+                    var data = {
+                        id:'@Model.Id'
+                        , urlImgs: arrImg
+                    };
+                    $.post('/Admin/AdminProduct/RemoveImages', data)
+                        .done(function(data) {
+                            if (data.Ok) {
+                                toastr.success(data.Message);
+
+                                $.each(ProductImageGallery._imgData, function (index, selVal) {
+                                    $.each(ProductImageGallery._imgSelected, function (idx, valx) {
+                                        if ( selVal.UrlImage == valx.UrlImage) {
+                                            ProductImageGallery._imgData.splice(index, 1);
+                                            ProductImageGallery._imgSelected.splice(idx, 1);
+                                        }
+                                    });
+                                });
+
+                                ProductImageGallery._imgSelected = [];
+
+                                ProductImageGallery.$tblImgGallery.bootstrapTable('load', ProductImageGallery._imgData);
+                          
+                            } else {
+                                toastr.error(data.Message);
+                            }
+                        }).fail(function() {
+                            bootbox.alert({
+                                message: "Can not make request, check your internet and try to reload page",
+                                backdrop: true
+                            });
+                        });
+
+                  
+                }
+            }
+
+            ProductImageGallery.init($('#tblImgGallery'));
+        </script>
+    }
+
+    @if (Model.AllowComment)
+    {
+     
+        <script>
+            ProductComment= {
+                init:function() {
+                    ProductComment.initTable();
+                    
+                }
+                ,
+                postComment:function() {
+                    bootbox.confirm('Do you want to POST COMMENT?',
+                        function(result) {
+                            if (!result) return;
+
+                            var data = {
+                                id: '@Model.Id',
+                                comment:$('#txtComment').val()
+                            };
+                            if (data.comment == '') {
+                                toastr.error('Must input comment');
+                                return;
+                            }
+                            $.post('/Admin/AdminProduct/AddComent',
+                                    data)
+                                .done(function(data) {
+                                    if (data.Ok) {
+                                        toastr.success(data.Message);
+                                        $('#txtComment').val('');
+                                        ProductComment.refresh();
+                                    } else {
+                                        toastr.error(data.Message);
+                                    }
+                                }).fail(function() {
+                                    bootbox.alert({
+                                        message: "Can not make request, check your internet and try to reload page",
+                                        backdrop: true
+                                    });
+                                });
+                        });
+                },
+                refresh: function () {
+                    $('#tblComments').bootstrapTable('refresh');
+                },
+                initTable: function() {
+                    $('#tblComments').bootstrapTable({
+                        idField: 'Id',
+                        //data: AdminUser.arrayCheckedIds,
+                        method: 'post',
+                        url: '/Admin/AdminProduct/ListComments?__=' + (new Date().getTime()),
+                        sidePagination: 'server',
+                        pagination: true,
+                        showToggle: false,
+                        minimumCountColumns: 1,
+                        pageSize: 10,
+                        pageList: [10, 20, 50, 100, 200],
+                        showColumns: false,
+                        showRefresh: false,
+                        sortName: 'CreatedDate',
+                        sortOrder: 'desc',
+                        queryParams: function(p) {
+                            return {
+                                productId:'@Model.Id',
+                                sortField: p.sort,
+                                orderBy: p.order,
+                                take: p.limit,
+                                skip: p.offset
+                            };
+                        },
+                        columns: [
+                            {
+                                field: 'Content',
+                                title: 'Comment',
+                                align: 'left',
+                                valign: 'middle',
+                                formatter: function(value, row) {
+                                    return value;
+                                }
+                            }, {
+                                field: 'AuthorName',
+                                title: 'AuthorName',
+                                align: 'left',
+                                valign: 'middle',
+                                formatter: function (value, row) {
+                                    return value;
+                                }
+                            }, {
+                                field: 'CreatedDate',
+                                title: 'CreatedDate',
+                                align: 'left',
+                                valign: 'middle',
+                                formatter: function (value, row) {
+                                    return Util.dateTimeFromJson( value);
+                                }
+                            }
+                        ]
+                    });
+
+                }
+            }
+
+            ProductComment.init();
+        </script>
+    }
+    
+    <script>
+        AdminCategoryCheckboxTree = {
+            _$checkBoxTree:null,
+            loadTree: function () {
+                $('#category-tree').on('changed.jstree',
+                        function (e, data) {
+                            //var i, j, r = [];
+                            //for (i = 0, j = data.selected.length; i < j; i++) {
+                            //    r.push(data.instance.get_node(data.selected[i]));
+                            //}
+                            //if (r.length > 0) {
+                            //    $('#categoryId').val(r[0].id);
+                            //    $('#categoryTitle').text(r[0].text);
+                            //    AdminCategoryCheckboxTree.hideTree();
+                            //}
+                        }
+                    )
+                    .on('select_node.jstree', function (e, data) {
+                        if (data.event) {
+                            data.instance.select_node(data.node.children_d);
+                        }
+                    })
+                    .on('deselect_node.jstree', function (e, data) {
+                        if (data.event) {
+                            data.instance.deselect_node(data.node.children_d);
+                        }
+                    })
+                    .jstree({
+                        "core": {
+                            "themes": {
+                                "responsive": false
+                            },
+                            "check_callback": true,
+                            'data': {
+                                'url': function (node) {
+                                    return '/Admin/AdminProduct/CategoryTree';
+                                },
+                                'data': function (node) {
+                                    return { 'id': node.id };
+                                }
+                            }
+                        },
+                        "types": {
+                            "default": {
+                                "icon": "fa fa-folder icon-state-warning icon-lg"
+                            },
+                            "root": {
+                                "icon": "fa fa-folder icon-state-warning icon-lg"
+                            },
+                            "file": {
+                                "icon": "fa fa-file icon-state-warning icon-lg"
+                            }
+                        },
+                        "plugins": ["types", "checkbox"]
+                    });
+            }
+            , showTree: function () {
+                $('#bound-category-tree').show();
+            },
+            hideTree: function () {
+                $('#bound-category-tree').hide();
+            },
+            getCheckedIds:function() {
+                var checkedIds = [];
+
+                var arrChecked = $('#category-tree').jstree("get_checked",null, true);
+
+                for (var i = 0; i < arrChecked.length; i++) {
+                    checkedIds.push(arrChecked[i]);
+                }
+                return checkedIds;
+            },
+            clearAllChecked:function() {
+                $('#category-tree').jstree('uncheck_all');
+            },
+            checkAll: function () {
+                $('#category-tree').jstree('check_all');
+            }
+        }
+        
+        AdminCategoryCheckboxTree.loadTree();
+    </script>
+    <script>
+        ProductList = {
+            _$tblView: null,
+            _guidEmpty: '@Guid.Empty.ToString()',
+            _$txtSearch: null,
+            _categoryId: null,
+            _productInCombo:@Html.Raw(JsonConvert.SerializeObject(Model.ProductsInCombo)),
+            init: function($tblView, $txtSearch, categoryId) {
+                ProductList._categoryId = categoryId;
+                ProductList._$tblView = $tblView;
+                ProductList._$txtSearch = $txtSearch;
+
+                ProductList.initSearchProduct();
+                ProductList.initProductInCombo();
+            },
+            initProductInCombo:function() {
+                $('#tblProductInCombo').bootstrapTable({
+                    idField: 'Id',
+                    data: ProductList._productInCombo,
+                    //method: 'post',
+                    //url: '/Admin/AdminProduct/List?__=' + (new Date().getTime()),
+                    //sidePagination: 'server',
+                    pagination: false,
+                    showToggle: false,
+                    minimumCountColumns: 1,
+                    pageSize: 10,
+                    pageList: [10, 20, 50, 100, 200],
+                    showColumns: false,
+                    showRefresh: false,
+                    sortName: 'CreatedDate',
+                    sortOrder: 'desc',
+                    queryParams: function(p) {
+                       
+                        return {
+                            sortField: p.sort,
+                            orderBy: p.order,
+                            take: p.limit,
+                            skip: p.offset
+                        };
+                    },
+                    columns: [
+                        {
+                            field: 'Title',
+                            title: 'Title',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function(value, row) {
+                                return '[' + row.ProductCode+'] '+ value;
+                            }
+                        }, {
+                            field: 'Price',
+                            title: 'Price',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                var temp = value + ' @defaultLang.CurrencyCode';
+                                var clId = '@currentLang.Id';
+                                var dlId = '@defaultLang.Id';
+                                if (clId != dlId) {
+                                    temp += '<br> ' + (parseFloat(value) * parseFloat('@currentLang.CurrencyExchangeRate'))
+                                        + ' @currentLang.CurrencyCode (Price in @currentLang.Title)';
+                                }
+                                return temp;
+                            }
+                        },{
+                            field: 'Published',
+                            title: 'Published',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value;
+                            }
+                        }, {
+                            field: 'Id',
+                            title: '',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function(value, row) {
+                                var temp = '<a href="javascript:" onclick="ProductList.removeFromCombo(\''+value+'\')">Remove from combo</a>';
+                                return temp;
+                            }
+                        }
+                    ]
+                });
+            }
+            ,
+            initSearchProduct: function() {
+                ProductList._$tblView.bootstrapTable({
+                    idField: 'Id',
+                    //data: AdminUser.arrayCheckedIds,
+                    method: 'post',
+                    url: '/Admin/AdminProduct/List?__=' + (new Date().getTime()),
+                    sidePagination: 'server',
+                    pagination: true,
+                    showToggle: false,
+                    minimumCountColumns: 1,
+                    pageSize: 10,
+                    pageList: [10, 20, 50, 100, 200],
+                    showColumns: false,
+                    showRefresh: false,
+                    sortName: 'CreatedDate',
+                    sortOrder: 'desc',
+                    queryParams: function(p) {
+                        var keywords = '';
+                        if ( ProductList._$txtSearch) {
+                            keywords =  ProductList._$txtSearch.val();
+                        }
+                        return {
+                            sortField: p.sort,
+                            orderBy: p.order,
+                            take: p.limit,
+                            skip: p.offset,
+                            keywords: keywords,
+                            categoryIds: AdminCategoryCheckboxTree.getCheckedIds()
+                        };
+                    },
+                    columns: [
+                        {
+                            field: 'Title',
+                            title: 'Title',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function(value, row) {
+                                return '[' + row.ProductCode+'] '+ value;
+                            }
+                        }, {
+                            field: 'Price',
+                            title: 'Price',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                var temp = value + ' @defaultLang.CurrencyCode';
+                                var clId = '@currentLang.Id';
+                                var dlId = '@defaultLang.Id';
+                                if (clId != dlId) {
+                                    temp += '<br> ' + (parseFloat(value) * parseFloat('@currentLang.CurrencyExchangeRate'))
+                                        + ' @currentLang.CurrencyCode (Price in @currentLang.Title)';
+                                }
+                                return temp;
+                            }
+                        },{
+                            field: 'Published',
+                            title: 'Published',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value;
+                            }
+                        }, {
+                            field: 'Id',
+                            title: '',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function(value, row) {
+                                var temp = '<a href="javascript:" onclick="ProductList.addToCombo(\''+value+'\')" >Add to combo</a>';
+                                return temp;
+                            }
+                        }
+                    ]
+                });
+
+            }
+            ,
+            refresh: function () {
+                ProductList._$tblView.bootstrapTable('refresh');
+            },
+            removeFromCombo:function(id) {
+                var temp = [];
+                for (var i = 0; i < ProductList._productInCombo.length; i++) {
+                    if (id != ProductList._productInCombo[i].Id) {
+                        temp.push(ProductList._productInCombo[i]);
+                    }
+                }
+
+                ProductList._productInCombo = temp;
+                $('#tblProductInCombo').bootstrapTable('load',  ProductList._productInCombo);
+            },
+            addToCombo:function(id) {
+                var rows = ProductList._$tblView.bootstrapTable('getData');
+                var row = null;
+                for (var i = 0; i < rows.length; i++) {
+                    if (id == rows[i].Id) {
+                        row = rows[i];
+                        break;
+                    }
+                }
+                for (var i = 0; i < ProductList._productInCombo.length; i++) {
+                    if (id == ProductList._productInCombo[i].Id) {
+                        return;
+                    }
+                }
+                ProductList._productInCombo.push(row);
+                $('#tblProductInCombo').bootstrapTable('load', ProductList._productInCombo);
+            },
+            saveCombo:function() {
+                bootbox.confirm('Do you want to SAVE?',
+                    function(result) {
+                        if (!result) return;
+                        var ids = [];
+                        for (var i = 0; i < ProductList._productInCombo.length; i++) {
+                            ids.push(ProductList._productInCombo[i].Id);
+                        }
+                        var data = {
+                            id: '@Model.Id',
+                            productIds:ids
+                        };
+                        
+                        $.post('/Admin/AdminProduct/SaveProductsInCombo',
+                                data)
+                            .done(function(data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                   
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function() {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+                    });
+            }
+        }
+
+        ProductList.init($('#tblView'), $('#txtSearch'));
+    </script>
+    
+    <script>
+        ProductPromotion = {
+            _selectedIds:@Html.Raw(JsonConvert.SerializeObject(Model.Promotions)),
+            init:function() {
+                ProductPromotion.initTable();
+
+                $('#tblPromotion').on('load-success.bs.table', function (e, data) {
+                    var selected =[];
+                    for (var i = 0; i < ProductPromotion._selectedIds.length; i++) {
+                        selected.push(ProductPromotion._selectedIds[i].Id);
+                        // $("#tblPromotion").bootstrapTable('check', ProductPromotion._selectedIds[i].Id );
+                    }
+                    $("#tblPromotion").bootstrapTable('checkBy', { field: 'Id', values: selected });
+                });
+            },
+            initTable: function () {
+                $('#tblPromotion').bootstrapTable({
+                    idField: 'Id',
+                    //data: AdminUser.arrayCheckedIds,
+                    method: 'post',
+                    url: '/Admin/AdminProductPromotion/List?__=' + (new Date().getTime()),
+                    sidePagination: 'server',
+                    pagination: false,
+                    showToggle: false,
+                    minimumCountColumns: 1,
+                    pageSize: 10,
+                    pageList: [10, 20, 50, 100, 200],
+                    showColumns: false,
+                    showRefresh: false,
+                    sortName: 'CreatedDate',
+                    sortOrder: 'desc',
+                    queryParams: function (p) {
+                        var keywords = '';
+
+                        return {
+                            sortField: p.sort,
+                            orderBy: p.order,
+                            take: p.limit,
+                            skip: p.offset,
+                            keywords: keywords
+                        };
+                    },
+                    columns: [
+                        {
+                            field: '',
+                            title: '',
+                            align: 'left',
+                            valign: 'middle',
+                            checkbox:true,
+                            formatter: function (value, row) {
+                                return value;
+                            }
+                        },
+                        {
+                            field: 'Description',
+                            title: 'Description',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value;
+                            }
+                        }, {
+                            field: 'ProductQuantity',
+                            title: 'Product Quantity',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value;
+                            }
+                        }, {
+                            field: 'DiscountValue',
+                            title: 'Discount Value',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value;
+                            }
+                        }
+                    ]
+                    ,
+                    onCheckAll: function (rows) {
+                        ProductPromotion._selectedIds = [];
+                        $.each(rows, function (index, value) {
+                            ProductPromotion._selectedIds.push(value);
+                        });
+                    },
+                    onUncheckAll: function (rows) {
+                        ProductPromotion._selectedIds = [];
+                    },
+                    onCheck: function (row) {
+                        var existed = false;
+                        $.each(ProductPromotion._selectedIds, function (index, value) {
+                            if (value.Id == row.Id) {
+                                existed = true;
+                            }
+                        });
+                        if (!existed) {
+                            ProductPromotion._selectedIds.push(row);
+                        }
+                    },
+                    onUncheck: function (row) {
+                        $.each(ProductPromotion._selectedIds, function (index, value) {
+                            if (value.Id == row.Id) {
+                                ProductPromotion._selectedIds.splice(index, 1);
+                            }
+                        });
+                    }
+                });
+            }
+            , save: function (isSave) {
+                var selected =[];
+                for (var i = 0; i < ProductPromotion._selectedIds.length; i++) {
+                    selected.push(ProductPromotion._selectedIds[i].Id);
+                }
+
+                var title = 'Do you want to DELETE?';
+                var url = '/Admin/AdminProductPromotion/RemovePromotionsFromProduct';
+
+                if (isSave) {
+                    title = 'Do you want to SAVE?';
+                    url = '/Admin/AdminProductPromotion/AddPromotionsToProduct';
+                }
+                bootbox.confirm(title, function(result) {
+                    if (!result) return;
+                    var requestData = {
+                        productId: '@Model.Id',
+                        promotionIds: selected
+                    };
+                    $.post(url, requestData)
+                        .done(function(data) {
+                            if (data.Ok) {
+                                toastr.success(data.Message);
+                                $('#tblPromotion').bootstrapTable('refresh');
+                            } else {
+                                toastr.error(data.Message);
+                            }
+                        }).fail(function() {
+                            bootbox.alert({
+                                message: "Can not make request, check your internet and try to reload page",
+                                backdrop: true
+                            });
+                        });
+                });
+            }
+        }
+        ProductPromotion.init();
+    </script>
+    
+    <script>
+        ProductSupplier = {
+            _selectedIds:@Html.Raw(JsonConvert.SerializeObject(Model.Suppliers)),
+            init:function() {
+                ProductSupplier.initTable();
+
+                $('#tblSupplier').on('load-success.bs.table', function (e, data) {
+                    var selected =[];
+                    for (var i = 0; i < ProductSupplier._selectedIds.length; i++) {
+                        selected.push(ProductSupplier._selectedIds[i].Id);
+                        // $("#tblPromotion").bootstrapTable('check', ProductPromotion._selectedIds[i].Id );
+                    }
+                    $("#tblSupplier").bootstrapTable('checkBy', { field: 'Id', values: selected });
+                });
+            },
+            initTable: function () {
+                $('#tblSupplier').bootstrapTable({
+                    idField: 'Id',
+                    //data: AdminUser.arrayCheckedIds,
+                    method: 'post',
+                    url: '/Admin/AdminSupplier/List?__=' + (new Date().getTime()),
+                    sidePagination: 'server',
+                    pagination: false,
+                    showToggle: false,
+                    minimumCountColumns: 1,
+                    pageSize: 10,
+                    pageList: [10, 20, 50, 100, 200],
+                    showColumns: false,
+                    showRefresh: false,
+                    sortName: 'CreatedDate',
+                    sortOrder: 'desc',
+                    queryParams: function (p) {
+                        var keywords = '';
+
+                        return {
+                            sortField: p.sort,
+                            orderBy: p.order,
+                            take: p.limit,
+                            skip: p.offset,
+                            keywords: keywords
+                        };
+                    },
+                    columns: [
+                        {
+                            field: '',
+                            title: '',
+                            align: 'left',
+                            valign: 'middle',
+                            checkbox:true
+                        },
+                        {
+                            field: 'AddressName',
+                            title: 'AddressName',
+                            align: 'left',
+                            valign: 'middle',
+                        }, {
+                            field: 'Address',
+                            title: 'Address',
+                            align: 'left',
+                            valign: 'middle'
+                        }, {
+                            field: 'Phone',
+                            title: 'Phone',
+                            align: 'left',
+                            valign: 'middle'
+                        }, {
+                            field: 'Email',
+                            title: 'Email',
+                            align: 'left',
+                            valign: 'middle'
+                        }
+                    ]
+                    ,
+                    onCheckAll: function (rows) {
+                        ProductSupplier._selectedIds = [];
+                        $.each(rows, function (index, value) {
+                            ProductSupplier._selectedIds.push(value);
+                        });
+                    },
+                    onUncheckAll: function (rows) {
+                        ProductSupplier._selectedIds = [];
+                    },
+                    onCheck: function (row) {
+                        var existed = false;
+                        $.each(ProductSupplier._selectedIds, function (index, value) {
+                            if (value.Id == row.Id) {
+                                existed = true; 
+                            }
+                        });
+                        if (!existed) {
+                            ProductSupplier._selectedIds.push(row);
+                        }
+                    },
+                    onUncheck: function (row) {
+                        $.each(ProductSupplier._selectedIds, function (index, value) {
+                            if (value.Id == row.Id) {
+                                ProductSupplier._selectedIds.splice(index, 1);
+                            }
+                        });
+                    }
+                });
+            }
+            , save: function (isSave) {
+                var selected =[];
+                for (var i = 0; i < ProductSupplier._selectedIds.length; i++) {
+                    selected.push(ProductSupplier._selectedIds[i].Id);
+                }
+
+                var title = '';
+                var url = '';
+
+                if (isSave) {
+                    title = 'Do you want to SAVE?';
+                    url = '/Admin/AdminSupplier/AddSuppliersToProduct';
+                }
+                bootbox.confirm(title, function(result) {
+                    if (!result) return;
+                    var requestData = {
+                        productId: '@Model.Id',
+                        supplierIds: selected
+                    };
+                    $.post(url, requestData)
+                        .done(function(data) {
+                            if (data.Ok) {
+                                toastr.success(data.Message);
+                                $('#tblSupplier').bootstrapTable('refresh');
+                            } else {
+                                toastr.error(data.Message);
+                            }
+                        }).fail(function() {
+                            bootbox.alert({
+                                message: "Can not make request, check your internet and try to reload page",
+                                backdrop: true
+                            });
+                        });
+                });
+            }
+        }
+        ProductSupplier.init();
+    </script>
+}

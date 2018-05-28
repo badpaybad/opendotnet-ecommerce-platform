@@ -1,0 +1,319 @@
+﻿@using Core.FrontEnd.Areas.Admin.Models
+@using Newtonsoft.Json
+@model UserEditAdminPage
+
+@{
+    ViewBag.Title = "User detail";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<h2>User detail </h2>
+<div>
+    <a href="/Admin/AdminUser">Back to list</a> | <a href="/Admin/AdminUser/Edit/?id=@(Guid.Empty)">Click to create new user</a>
+</div>
+<div class="row">
+    <div class="col-md-6">
+
+        <div class="portlet light bordered">
+            <div class="portlet-title">
+                <div class="caption">
+                    @if (Model.PageMode == PageMode.Edit)
+                    {
+                    <div>Edit</div>
+                    <div class="caption-desc">@Model.Username</div>
+                    }
+                    else
+                    {
+                    <span>Create new</span>
+                    }
+                </div>
+                <div class="actions">
+                </div>
+            </div>
+            <div class="portlet-body form">
+
+                <div class="form-group">
+                    <label class="control-label">Username</label>
+                    <input id="username" type="text" placeholder="username" class="form-control"
+                           @(Model.PageMode == PageMode.Edit ? "readonly=readonly" : "")
+                           value="@Model.Username">
+                </div>
+                <div class="form-group">
+                    <div class="row">
+                        <div class="col-md-9">
+                            <label class="control-label">Password</label>
+                            <input id="password" type="password"
+                                   placeholder="@(Model.PageMode == PageMode.Edit ? "leave empty to no change" : "type your password")" class="form-control"
+                                   value="">
+                        </div>
+                        <div class="col-md-3">
+                            @if (Model.PageMode == PageMode.Edit)
+                            {
+                            <label class="control-label">&nbsp;</label>
+                            <input class="btn btn-default form-control" id="btnChangePassword"
+                                   type="button" value="Change"
+                                   onclick="UserEditPage.changePassword()">
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Phone</label>
+                    <input id="phone" type="text" placeholder="phone" class="form-control"
+                           value="@Model.Phone">
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Email</label>
+                    <input id="email" type="text" placeholder="email" class="form-control"
+                           value="@Model.Email">
+                </div>
+                <input id="id" type="hidden" value="@Model.Id" />
+
+            </div>
+            <div class="form-actions">
+                @if (Model.PageMode == PageMode.Create)
+                {
+                <input class="btn btn-default" id="btnSave" type="button" value="Save new"
+                       onclick="UserEditPage.save()">
+                }
+                else
+                {
+                <input class="btn btn-default" id="btnSave" type="button" value="Save"
+                       onclick="UserEditPage.save()">
+
+                <input class="btn btn-default" id="btnDelete" type="button" value="Delete"
+                       onclick="UserEditPage.delete()">
+
+                <input class="btn btn-default" id="btnActive" type="button" value="Active"
+                       onclick="UserEditPage.active(true)">
+
+                <input class="btn btn-default" id="btnDeactive" type="button" value="Deactive"
+                       onclick="UserEditPage.active(false)">
+                }
+
+            </div>
+        </div>
+
+
+    </div>
+    <div class="col-md-6">
+        @if (Model.PageMode == PageMode.Edit)
+        {
+            <div class="portlet light bordered">
+                <div class="portlet-title">
+                    <div class="caption">
+                        Roles
+                    </div>
+                    <div class="actions">
+                    </div>
+                </div>
+                <div class="portlet-body form">
+
+                    <div class="form-group">
+                        <div class="icheck-list system-role">
+                            @foreach (var role in Model.AllRoles)
+                            {
+                                <label>
+                                    <input type="checkbox" name="role" class="icheck" id="role-@role.Id"
+                                           indeterminate="true" 
+                                           data-id='@role.Id'> @role.Title
+                                </label>
+                            }
+                        </div>
+                    </div>
+
+                </div>
+                <div class="form-actions">
+                    <input class="btn btn-default" id="btnAssignRole" type="button" value="Assign"
+                           onclick="UserEditPage.saveRoles()">
+                
+                    <input class="btn btn-default" id="btnRemoveAllRoles" type="button" value="Unassign all"
+                           onclick="UserEditPage.removeAllRoles()">
+
+                </div>
+            </div>
+ 
+        }
+    
+
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        UserEditPage = {
+            __roles: @(Html.Raw(JsonConvert.SerializeObject(Model.Roles)))
+            ,
+            init: function () {
+                $('.system-role input').each(function() {
+                    var chk = $(this);
+                    //chk.iCheck('uncheck');
+                    for (var i = 0; i < UserEditPage.__roles.length; i++) {
+
+                        if (chk.attr('data-id') == UserEditPage.__roles[i].Id) {
+                            chk.iCheck('check');
+                            break;
+                        }
+                    }
+                });
+            }
+            , 
+              removeAllRoles:function() {
+                  bootbox.confirm('Do you want to REMOVE ALL Roles?', function (result) {
+                      if (!result) return;
+                      
+                      $.post('/Admin/AdminUser/RemoveAllRoles',
+                              {
+                                  id: '@Model.Id'
+                              })
+                          .done(function (data) {
+                              if (data.Ok) {
+                                  toastr.success(data.Message);
+                                  window.location = "/Admin/AdminUser/Edit/" + data.Data.Id;
+                        
+                              } else {
+                                  toastr.error(data.Message);
+                              }
+                          }).fail(function () {
+                              bootbox.alert({
+                                  message: "Can not make request, check your internet and try to reload page",
+                                  backdrop: true
+                              });
+                          });
+                  });
+              }
+            , saveRoles:function() {
+                bootbox.confirm('Do you want to change Roles?', function (result) {
+                    if (!result) return;
+
+                    var roles = [];
+
+                    $(".system-role input:checked").each(function() {
+                        roles.push($(this).attr('data-id'));
+                    });
+
+                    $.post('/Admin/AdminUser/AssignRoles',
+                            {
+                                id: '@Model.Id',
+                                roles: roles
+                            })
+                        .done(function (data) {
+                            if (data.Ok) {
+                                toastr.success(data.Message);
+
+                            } else {
+                                toastr.error(data.Message);
+                            }
+                        }).fail(function () {
+                            bootbox.alert({
+                                message: "Can not make request, check your internet and try to reload page",
+                                backdrop: true
+                            });
+                        });
+                });
+            }
+            ,
+            changePassword:function() {
+                bootbox.confirm('Do you want to change password?', function (result) {
+                    if (!result) return;
+
+                    $.post('/Admin/AdminUser/ChangePassword',
+                        {
+                            id: '@Model.Id',
+                            password: $('#password').val()
+                        })
+                        .done(function (data) {
+                            if (data.Ok) {
+                                toastr.success(data.Message);
+
+                            } else {
+                                toastr.error(data.Message);
+                            }
+                        }).fail(function () {
+                            bootbox.alert({
+                                message: "Can not make request, check your internet and try to reload page",
+                                backdrop: true
+                            });
+                        });
+                });
+            },
+            save: function () {
+                bootbox.confirm('Do you want to Save?', function (result) {
+                    if (!result) return;
+
+                    $.post('/Admin/AdminUser/CreateOrUpdate',
+                            {
+                                id: '@Model.Id',
+                                password: $('#password').val(),
+                                username: $('#username').val(),
+                                phone: $('#phone').val(),
+                                email: $('#email').val(),
+                            })
+                        .done(function (data) {
+                            if (data.Ok) {
+                                toastr.success(data.Message);
+                                window.location = "/Admin/AdminUser/Edit/" + data.Data.Id;
+                            } else {
+                                toastr.error(data.Message);
+                            }
+                        }).fail(function () {
+                            bootbox.alert({
+                                message: "Can not make request, check your internet and try to reload page",
+                                backdrop: true
+                            });
+                        });
+                });
+            },
+            delete:function() {
+                bootbox.confirm('Do you want to DELETE?', function(result) {
+                    if (!result) return;
+
+                    $.post('/Admin/AdminUser/Delete',
+                            {
+                                id: '@Model.Id',
+                            })
+                        .done(function(data) {
+                            if (data.Ok) {
+                                toastr.success(data.Message);
+                                window.location = "/Admin/AdminUser/Index/";
+                            } else {
+                                toastr.error(data.Message);
+                            }
+                        }).fail(function() {
+                            bootbox.alert({
+                                message: "Can not make request, check your internet and try to reload page",
+                                backdrop: true
+                            });
+                        });
+                });
+            },
+            active: function (isActive) {
+                bootbox.confirm('Do you want to ' + (isActive?'Active':'Deactive')+'?', function(result) {
+                    if (!result) return;
+
+                    $.post('/Admin/AdminUser/Active',
+                            {
+                                id: '@Model.Id',
+                                isActive:isActive
+                            })
+                        .done(function(data) {
+                            if (data.Ok) {
+                                toastr.success(data.Message);
+                                window.location = "/Admin/AdminUser/Index/";
+                            } else {
+                                toastr.error(data.Message);
+                            }
+                        }).fail(function() {
+                            bootbox.alert({
+                                message: "Can not make request, check your internet and try to reload page",
+                                backdrop: true
+                            });
+                        });
+                });
+            }
+        }
+
+        UserEditPage.init();
+    </script>
+}

@@ -1,0 +1,285 @@
+﻿@using DomainDrivenDesign.Core
+@model Core.FrontEnd.Models.FeOrderPaymentPage
+
+@{
+    Layout = null;
+    var currencyCode = EngineeCurrentContext.GetCurrencyCode();
+    var exchangeRate = EngineeCurrentContext.GetCurrencyExchangeRate();
+    var defaultLang = EngineeCurrentContext.GetDefaultLanguage();
+    var currentLang = EngineeCurrentContext.GetCurrentLanguage();
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Order: @Model.Order.OrderCode</title>
+    <style>
+        .shopping-cart-item-img {
+            max-height: 65px;
+        }
+        .qrcode {
+            padding: 0px !important;
+            margin: 0px !important;
+            border: 0px !important;
+        }
+        .qrcode table {
+            padding: 0px !important;
+            margin: 0px !important;
+            border: 0px !important;
+        }
+        .qrcode tr {
+            padding: 0px !important;
+            margin: 0px !important;
+            border: 0px !important;
+        }
+        .qrcode td {
+            padding: 0px !important;
+            margin: 0px !important;
+            border: 0px !important;
+        }
+        .order-info-detail {
+            font-size: 14pt;
+            font-weight: bold;
+        }
+    </style>
+
+    <link href="/Content/font-awesome/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/assets/bootstraptable/bootstrap-table.css" rel="stylesheet" />
+</head>
+<body>
+<div>
+    <h2>Order code: @Model.Order.OrderCode</h2>
+    <h3>
+        Receiving time : @Model.Order.ReceivingTime.ToString("yyyy-MM-dd HH:mm")
+    </h3>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="order-info-detail">
+                <div>
+                    Customer name: @Model.Address.AddressName
+                    <br/>
+                    Address: @Model.Address.Address <br/>
+                    Phone: @Model.Address.Phone <br/>
+                    Email: @Model.Address.Email
+                    <br/>
+                    Note: @Model.Address.Message
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="qrcode" id="qrcode"></div>
+        </div>
+    </div>
+ 
+    <table id="tblView"></table>
+
+    Created date at: @Model.Order.CreatedDate.ToString("yyyy-MM-dd HH:mm")
+    @if (Model.OrderPromotion.Id != Guid.Empty)
+    {
+        <div>
+            @Html.Raw(Model.OrderPromotion.Description)
+            @if (Model.OrderPromotion.FreeShip)
+            {
+                <div>
+                    Free ship because your total order greater than
+                    @(Model.OrderPromotion.AmountToDiscount * exchangeRate)@currencyCode
+                </div>
+            }
+            @if (Model.OrderPromotion.DiscountAmount > 0)
+            {
+                <div>
+                    Your save @(Model.OrderPromotion.DiscountAmount * exchangeRate)@currencyCode
+                    because your total order greater than
+                    @(Model.OrderPromotion.AmountToDiscount * exchangeRate)@currencyCode
+                </div>
+            }
+        </div>
+    }
+    <div>
+        Payment:
+        <div>
+            @Model.Payment.Name <br/>@Html.Raw(Model.Payment.Description)
+        </div>
+    </div>
+
+    <div>
+        Shipping:
+        <div>
+            @Model.Shipping.Name <br/>@Html.Raw(Model.Shipping.Description)
+        </div>
+               
+    </div>
+
+ 
+  
+</div>
+<script src="/assets/global/plugins/jquery.min.js" type="text/javascript"></script>
+<script src="/assets/global/plugins/jquery-ui/jquery-ui.min.js"></script>
+<script src="/assets/global/plugins/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+<script src="/assets/bootstraptable/bootstrap-table.js"></script>
+<script src="/assets/bootstraptable/bootstrap-table-filter.js"></script>
+<script src="/Scripts/jquery.qrcode.js"></script>
+<script src="/Scripts/qrcode.js"></script>
+
+  
+<script>
+    AdminOrderDetailPage = {
+        _$tblView: null,
+        _readyToPrint: false,
+        _tryPrintTimeout:null,
+        init: function ($tblView) {
+            AdminOrderDetailPage._readyToPrint = false;
+            AdminOrderDetailPage._$tblView = $tblView;
+
+            AdminOrderDetailPage.initTable();
+
+            jQuery('#qrcode').qrcode({
+                //render	: "table",
+                text: '@Model.Order.OrderCode'
+            });
+            var tempTimeout = setTimeout(function() {
+                AdminOrderDetailPage.tryPrint();
+            }, 2000);
+          
+        },
+        tryPrint:function() {
+            if (!AdminOrderDetailPage._readyToPrint) {
+                AdminOrderDetailPage._tryPrintTimeout = setTimeout(AdminOrderDetailPage.tryPrint, 2000);
+                return;
+            }
+
+            clearTimeout(AdminOrderDetailPage._tryPrintTimeout);
+           
+            window.print();
+        },
+        initTable: function() {
+            AdminOrderDetailPage._$tblView.bootstrapTable({
+                idField: 'ProductId',
+                method: 'post',
+                url: '/ShoppingCart/ListResult?__=' + (new Date().getTime()),
+                sidePagination: 'server',
+                pagination: false,
+                showToggle: false,
+                showFooter: true,
+                minimumCountColumns: 1,
+                pageSize: 10,
+                pageList: [10, 20, 50, 100, 200],
+                showColumns: false,
+                showRefresh: false,
+                sortName: 'CreatedDate',
+                sortOrder: 'desc',
+                queryParams: function(p) {
+
+                    return {
+                        id: '@Model.Order.Id',
+                        sortField: p.sort,
+                        orderBy: p.order,
+                        take: p.limit,
+                        skip: p.offset
+                    };
+                }, onPostBody: function (data) {
+                    AdminOrderDetailPage._readyToPrint = true;
+
+                },
+                columns: [
+                    {
+                        field: 'UrlImage',
+                        title: '',
+                        align: 'left',
+                        valign: 'middle',
+                        formatter: function(value, row) {
+                            return '<a href="/product/' + row.SeoUrlFriendly+'">' +
+                                '<img class="shopping-cart-item-img" src="' + row.UrlImage + '" id="'+row.Id+'"/></a>';
+
+                        },
+                        width:90
+                    },
+                    {
+                        field: 'Title',
+                        title: 'Title',
+                        align: 'left',
+                        valign: 'middle',
+                        formatter: function(value, row) {
+                            return '<a href="/product/' + row.SeoUrlFriendly + '"><i>' + row.Title + '</i></a>'
+                                + '<br>' + row.PromotionDescription;
+                        }
+                    }
+                    ,
+                    {
+                        field: 'UnitPrice',
+                        title: 'UnitPrice',
+                        align: 'right',
+                        valign: 'middle',
+                        formatter: function (value, row) {
+                            var temp = '';// value + ' @defaultLang.CurrencyCode';
+                            var clId = '@currentLang.Id';
+                            var dlId = '@defaultLang.Id';
+                            // if (clId != dlId) {
+                            temp += '' + (parseFloat(value) * parseFloat('@currentLang.CurrencyExchangeRate'))
+                                + '@currentLang.CurrencyCode';
+                            // }
+
+                            return temp;
+                        }
+                    }
+                    ,
+                    {
+                        field: 'Quantity',
+                        title: 'Quantity',
+                        align: 'right',
+                        valign: 'middle',
+                        formatter: function (value, row) {
+                            return value ;
+                        },
+                        footerFormatter:function() {
+                            var temp = '<strong>SubTotal: </strong><br>';
+                            temp += '<strong>Voucher: (@Model.Order.VoucherCode)</strong><br>';
+                            temp += '<strong>Discount (order): </strong><br>';
+                            temp += '<strong>Shipping cost: </strong><br>';
+                            temp += '<strong>Total: </strong>';
+                            return temp;
+                        }
+                    }
+                    ,
+                    {
+                        field: 'TotalPrice',
+                        title: 'TotalPrice',
+                        align: 'right',
+                        valign: 'middle',
+                        formatter: function (value, row) {
+                            var temp = '';// value + ' @defaultLang.CurrencyCode';
+                            var clId = '@currentLang.Id';
+                            var dlId = '@defaultLang.Id';
+                            //if (clId != dlId) {
+                            temp += '' + (parseFloat(value) * parseFloat('@currentLang.CurrencyExchangeRate'))
+                                + '@currentLang.CurrencyCode';
+                            // }
+
+                            return temp;
+                        },
+                        footerFormatter: function (data) {
+                            @*var totalSum = data.reduce(function(sum, row) {
+                                    return (sum) + (row.TotalPrice) ;
+                                }, 0);
+                                return totalSum +' @currencyCode';*@
+                            var temp = '<strong>@(Model.Order.CartSubTotal* currentLang.CurrencyExchangeRate)@currencyCode</strong><br>';
+                            temp += '<strong>-@(Model.Order.VoucherValue * currentLang.CurrencyExchangeRate)@currencyCode</strong><br>';
+                            temp += '<strong>-@(Model.Order.CartDiscount * currentLang.CurrencyExchangeRate)@currencyCode</strong><br>';
+                            temp += '<strong>+@(Model.Order.ShippingFee * currentLang.CurrencyExchangeRate)@currencyCode</strong><br>';
+                            temp += '<strong>@(Model.Order.CartTotal * currentLang.CurrencyExchangeRate)@currencyCode</strong>';
+                            return temp;
+                        }
+                    }
+                ]
+            });
+        }
+    }
+
+    AdminOrderDetailPage.init($('#tblView'));
+
+</script>
+  
+</body>
+</html>

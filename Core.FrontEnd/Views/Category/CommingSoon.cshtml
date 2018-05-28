@@ -1,0 +1,18 @@
+﻿@using Core.FrontEnd.Models
+@model FeCategory
+@{
+    ViewBag.Title = "CommingSoon";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section MetaSEO
+{
+    <meta content="@Model.SeoDescription" name="description" />
+    <meta content="@Model.SeoKeywords" name="keywords" />
+}
+<h2>CommingSoon</h2>
+
+<div>
+    @Html.Raw(Model.FirstNews.Description)
+</div>
+

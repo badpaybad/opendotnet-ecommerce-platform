@@ -1,0 +1,114 @@
+﻿@model dynamic
+
+@{
+    ViewBag.Title = "Contact us message";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Contact us message</h2>
+
+<div class="form-group">
+    <div class="input-group input-group-sm">
+        <input id="txtSearch" value="" class="form-control" placeholder="type keywords to search" />
+
+        <span class="input-group-btn">
+            <button class="btn green" type="button" onclick="NewsList.refresh()">Search</button>
+        </span>
+    </div>
+
+</div>
+<table id="tblView"></table>
+
+@section scripts
+{
+    <script>
+        var SystemInfo = {
+            _$tblView: null,
+            _guidEmpty: '@Guid.Empty.ToString()',
+            _$txtSearch: null,
+            init: function($tblView, $txtSearch) {
+                SystemInfo._$tblView = $tblView;
+                SystemInfo._$txtSearch = $txtSearch;
+
+                SystemInfo.initTable();
+            }
+            ,
+            initTable: function() {
+                SystemInfo._$tblView.bootstrapTable({
+                    idField: 'Id',
+                    //data: AdminUser.arrayCheckedIds,
+                    method: 'post',
+                    url: '/Admin/AdminSystemInfo/ListContactInfo?__=' + (new Date().getTime()),
+                    sidePagination: 'server',
+                    pagination: true,
+                    showToggle: false,
+                    minimumCountColumns: 1,
+                    pageSize: 10,
+                    pageList: [10, 20, 50, 100, 200],
+                    showColumns: false,
+                    showRefresh: false,
+                    sortName: 'CreatedDate',
+                    sortOrder: 'desc',
+                    queryParams: function(p) {
+                        var keywords = '';
+                        if (SystemInfo._$txtSearch) {
+                            keywords = SystemInfo._$txtSearch.val();
+                        }
+                        return {
+                          
+                            sortField: p.sort,
+                            orderBy: p.order,
+                            take: p.limit,
+                            skip: p.offset,
+                            keywords: keywords
+                        };
+                    },
+                    columns: [
+                        {
+                            field: 'Body',
+                            title: 'Message',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function(value, row) {
+                                return value ;
+                            }
+                        }, {
+                            field: 'FromEmail',
+                            title: 'FromEmail',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value;
+                            }
+                        }
+                        , {
+                            field: 'FromPhone',
+                            title: 'FromPhone',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value;
+                            }
+                        }
+                        , {
+                            field: 'CreatedDate',
+                            title: 'CreatedDate',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return Util.dateTimeFromJson( value);
+                            }
+                        }
+                    ]
+                });
+
+            }
+            ,
+            refresh: function () {
+                SystemInfo._$tblView.bootstrapTable('refresh');
+            }
+        }
+
+        SystemInfo.init($('#tblView'), $('#txtSearch'));
+    </script>
+}

@@ -1,0 +1,307 @@
+﻿@model dynamic
+
+@{
+    ViewBag.Title = "Order's promotions";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Order's promotions</h2>
+
+<div class="row">
+    <div class="col-md-7">
+        <div>
+            <a href="javascript:" onclick="OrderPromotion.create()">Create new</a>
+        </div>
+        <table id="tblView"></table>
+    </div>
+    <div class="col-md-5">
+        <table>
+            <tr>
+                <td>Description</td>
+                <td>
+                    <textarea id="description" class="text-editor-100"></textarea>
+                </td>
+            </tr>
+
+            <tr>
+                <td>Amount to discount (cart total equal or greater than)</td>
+                <td><input type="text" id="amountToDiscount" value="" /></td>
+            </tr>
+
+            <tr>
+                <td>Discount amount</td>
+                <td><input type="text" id="discountAmount" /> </td>
+            </tr>
+            <tr>
+                <td>Free ship</td>
+                <td><input type="checkbox" id="freeShip" /> </td>
+            </tr>
+
+            <tr>
+                <td></td>
+                <td>
+                    <button id="btnSaveNew" onclick="OrderPromotion.save(true)" style="display:none">Save new</button>
+                    <button id="btnSave" onclick="OrderPromotion.save(false)" style="display: none">Save</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        OrderPromotion = {
+            _selectedId:'@Guid.Empty',
+            init: function () {
+                Util.initTinyMceClassName('.text-editor-100', 100);
+
+                OrderPromotion.initTable();
+            },
+            initTable: function () {
+                $('#tblView').bootstrapTable({
+                    idField: 'Id',
+                    //data: AdminUser.arrayCheckedIds,
+                    method: 'post',
+                    url: '/Admin/AdminOrderPromotion/List?__=' + (new Date().getTime()),
+                    sidePagination: 'server',
+                    pagination: true,
+                    showToggle: false,
+                    minimumCountColumns: 1,
+                    pageSize: 10,
+                    pageList: [10, 20, 50, 100, 200],
+                    showColumns: false,
+                    showRefresh: false,
+                    sortName: 'CreatedDate',
+                    sortOrder: 'desc',
+                    queryParams: function (p) {
+                        var keywords = '';
+
+                        return {
+                            sortField: p.sort,
+                            orderBy: p.order,
+                            take: p.limit,
+                            skip: p.offset,
+                            keywords: keywords
+                        };
+                    },
+                    columns: [
+                        {
+                            field: 'Description',
+                            title: 'Description',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value;
+                            }
+                        }, {
+                            field: 'AmountToDiscount',
+                            title: 'Total',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value;
+                            }
+                        }, {
+                            field: 'DiscountAmount',
+                            title: 'Discount',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value;
+                            }
+                        }, {
+                            field: 'FreeShip',
+                            title: 'Free ship',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value;
+                            }
+                        }
+                        , {
+                            field: 'Actived',
+                            title: 'Actived',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value;
+                            }
+                        }, {
+                            field: 'Id',
+                            title: '',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                var temp = '';
+                                temp += ' <a href="javascript:" onclick="OrderPromotion.edit(\'' +
+                                    row.Id +
+                                    '\',true)">Edit</a>';
+                                temp += ' | <a href="javascript:" onclick="OrderPromotion.delete(\'' +
+                                    row.Id +
+                                    '\')">Delete</a>';
+                                temp += ' | <a href="javascript:" onclick="OrderPromotion.active(\'' +
+                                    row.Id +
+                                    '\')">Active</a>';
+                                temp += ' | <a href="javascript:" onclick="OrderPromotion.inactive(\'' +
+                                        row.Id +
+                                        '\')">Inactive</a>';
+                                return temp;
+                            }
+                        }
+                    ]
+                });
+            }
+            ,
+            active: function (id) {
+                bootbox.confirm('Do you want to ACTIVE?', function (result) {
+                    if (!result) return;
+
+                    $.post('/Admin/AdminOrderPromotion/Active',
+                        {
+                            id: id
+                        })
+                        .done(function (data) {
+                            if (data.Ok) {
+                                toastr.success(data.Message);
+                                $('#tblView').bootstrapTable('refresh');
+                            } else {
+                                toastr.error(data.Message);
+                            }
+                        }).fail(function () {
+                            bootbox.alert({
+                                message: "Can not make request, check your internet and try to reload page",
+                                backdrop: true
+                            });
+                        });
+                });
+            } ,
+            inactive: function (id) {
+                bootbox.confirm('Do you want to INACTIVE?', function (result) {
+                    if (!result) return;
+
+                    $.post('/Admin/AdminOrderPromotion/Inactive',
+                            {
+                                id: id
+                            })
+                        .done(function (data) {
+                            if (data.Ok) {
+                                toastr.success(data.Message);
+                                $('#tblView').bootstrapTable('refresh');
+                            } else {
+                                toastr.error(data.Message);
+                            }
+                        }).fail(function () {
+                            bootbox.alert({
+                                message: "Can not make request, check your internet and try to reload page",
+                                backdrop: true
+                            });
+                        });
+                });
+            }
+            ,
+            delete: function(id) {
+                bootbox.confirm('Do you want to DELETE?', function(result) {
+                    if (!result) return;
+
+                    $.post('/Admin/AdminOrderPromotion/Delete',
+                            {
+                                id: id
+                            })
+                        .done(function(data) {
+                            if (data.Ok) {
+                                toastr.success(data.Message);
+                                $('#tblView').bootstrapTable('refresh');
+                            } else {
+                                toastr.error(data.Message);
+                            }
+                        }).fail(function() {
+                            bootbox.alert({
+                                message: "Can not make request, check your internet and try to reload page",
+                                backdrop: true
+                            });
+                        });
+                });
+            },
+            edit:function(id) {
+                var rows = $('#tblView').bootstrapTable('getData');
+                var row=null;
+                for (var i = 0; i < rows.length; i++) {
+                    if (id == rows[i].Id) {
+                        row = rows[i];
+                        break;
+                    }
+                }
+
+                OrderPromotion._selectedId = id;
+                tinymce.get('description').setContent(row.Description);
+                $('#amountToDiscount').val(row.AmountToDiscount);
+                $('#discountAmount').val(row.DiscountAmount);
+                $('#freeShip').prop('checked', row.FreeShip);
+                if (row.FreeShip) {
+                    $('#freeShip').attr('checked', 'checked');
+                } else {
+                    $('#freeShip').removeAttr('checked');
+                }
+
+                $('#btnSaveNew').hide();
+                $('#btnSave').show();
+            }
+            ,
+            create:function() {
+                OrderPromotion._selectedId = '@Guid.Empty';
+                tinymce.get('description').setContent('');
+                $('#amountToDiscount').val('');
+                $('#discountAmount').val('');
+                $('#freeShip').prop('checked', false);
+                $('#freeShip').removeAttr('checked');
+                $('#btnSaveNew').show();
+                $('#btnSave').hide();
+            }
+            ,
+            save: function (isCreate) {
+                var description = tinymce.get('description').getContent();
+                var amountToDiscount=  $('#amountToDiscount').val();
+                var discountAmount = $('#discountAmount').val();
+                var freeShip = $('#freeShip').prop('checked');
+
+                if (amountToDiscount == '' || discountAmount == '') {
+                    alert('Product Quantity and Discount Valure are required');
+                    return;
+                }
+                var title = 'Do you want to SAVE?';
+                if (isCreate) {
+                    title = 'Do you want to CREATE NEW?';
+                }
+                bootbox.confirm(title, function(result) {
+                    if (!result) return;
+                    var id = OrderPromotion._selectedId;
+
+                    $.post('/Admin/AdminOrderPromotion/Save',
+                            {
+                                id: id,
+                                description: description,
+                                amountToDiscount: amountToDiscount,
+                                discountAmount: discountAmount,
+                                freeShip: freeShip
+                            })
+                        .done(function(data) {
+                            if (data.Ok) {
+                                toastr.success(data.Message);
+                                $('#tblView').bootstrapTable('refresh');
+                            } else {
+                                toastr.error(data.Message);
+                            }
+                        }).fail(function() {
+                            bootbox.alert({
+                                message: "Can not make request, check your internet and try to reload page",
+                                backdrop: true
+                            });
+                        });
+                });
+            }
+        }
+
+        OrderPromotion.init();
+    </script>
+}

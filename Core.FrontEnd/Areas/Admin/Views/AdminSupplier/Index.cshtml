@@ -1,0 +1,368 @@
+﻿@using DomainDrivenDesign.Core
+@model dynamic
+
+@{
+    ViewBag.Title = "Supplier management";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+@section head
+{
+    <link href="/Content/google-map.css" rel="stylesheet" />
+}
+<h2>Supplier management</h2>
+<div class="row">
+    <div class="col-md-6">
+        <a href="javascript:" onclick="AdminSupplier.create()">Create new</a>
+        <table id="tblView"></table>
+    </div>
+    <div class="col-md-6">
+        <table>
+            <tr>
+                <td>Address name</td>
+                <td>
+                    <input id="addressName" />
+                </td>
+            </tr>
+            <tr>
+                <td>Phone</td>
+                <td><input id="phone" /></td>
+            </tr>
+            <tr>
+                <td>Email</td>
+                <td><input id="email" /></td>
+            </tr>
+            <tr>
+                <td>Note</td>
+                <td>
+                    <textarea id="note"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td>Address</td>
+                <td>
+                    <input id="address" type="text" placeholder="type your address" style="width: 100%">
+                    <input id="address-lat" readonly="readonly" value="21.0286234" />
+                    <input id="address-lng" readonly="readonly" value="105.8437302" />
+                    <div id="map"></div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="hidden" value="" id="addressId" />
+                </td>
+                <td>
+                    <button id="btnSave" onclick="AdminSupplier.save(false)" style="display:none">Save</button>
+                    <button id="btnSaveNew" onclick="AdminSupplier.save(true)" style="display:none">Save new</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+@section scripts{
+    <script>
+        AdminSupplier = {
+            _$tblView: $('#tblView'),
+            init: function() {
+                AdminSupplier.initTable();
+            },
+            initTable: function() {
+                AdminSupplier._$tblView.bootstrapTable({
+                    idField: 'Id',
+                    //data: AdminUser.arrayCheckedIds,
+                    method: 'post',
+                    url: '/Admin/AdminSupplier/List?__=' + (new Date().getTime()),
+                    sidePagination: 'server',
+                    pagination: true,
+                    showToggle: false,
+                    minimumCountColumns: 1,
+                    pageSize: 10,
+                    pageList: [10, 20, 50, 100, 200],
+                    showColumns: false,
+                    showRefresh: false,
+                    sortName: 'CreatedDate',
+                    sortOrder: 'desc',
+                    queryParams: function(p) {
+                        return {
+                            sortField: p.sort,
+                            orderBy: p.order,
+                            take: p.limit,
+                            skip: p.offset
+                        };
+                    },
+                    columns: [
+                        {
+                            field: 'AddressName',
+                            title: 'AddressName',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function(value, row) {
+                                var temp = value;
+                                temp += '<br>' + row.Phone;
+                                temp += '<br>' + row.Email;
+                                temp += '<br>Note: ' + row.Note;
+                                return temp;
+                            }
+                        }, {
+                            field: 'Address',
+                            title: 'Address',
+                            align: 'left',
+                            valign: 'middle'
+                        }, {
+                            field: 'Id',
+                            title: '',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function(value, row) {
+                                var temp = "";
+                                temp += '<a href="javascript:" onclick="AdminSupplier.edit(\'' +
+                                    row.Id +
+                                    '\')">Edit</a>';
+
+                                temp += ' | <a href="javascript:" onclick="AdminSupplier.delete(\'' +
+                                    row.Id +
+                                    '\')">Delete</a>';
+
+                                return temp;
+                            }
+                        }
+                    ]
+                });
+
+            },
+            edit: function(id) {
+                var rows = AdminSupplier._$tblView.bootstrapTable('getData');
+                var row = null;
+                for (var i = 0; i < rows.length; i++) {
+                    if (id == rows[i].Id) {
+                        row = rows[i];
+                        break;
+                    }
+                }
+
+                $('#addressId').val(row.Id);
+                $('#addressName').val(row.AddressName);
+                $('#address').val(row.Address);
+                $('#address-lat').val(row.AddressLatitude);
+                $('#address-lng').val(row.AddressLongitude);
+                $('#phone').val(row.Phone);
+                $('#email').val(row.Email);
+                $('#note').val(row.Note);
+
+                $('#btnSave').show();
+                $('#btnSaveNew').hide();
+
+                AdminSupplier._marker.setMap(null);
+                AdminSupplier._marker = new google.maps.Marker({
+                    position: { lat: row.AddressLatitude, lng: row.AddressLongitude },
+                    map: AdminSupplier._map,
+                    title: 'Your are here'
+                });
+                AdminSupplier._marker.setMap(AdminSupplier._map);
+                AdminSupplier._map.panTo({ lat: row.AddressLatitude, lng: row.AddressLongitude });
+            },
+            create: function() {
+
+                $('#addressId').val('');
+                $('#addressName').val('');
+                $('#address').val('');
+                $('#address-lat').val('');
+                $('#address-lng').val('');
+                $('#phone').val('');
+                $('#email').val('');
+                $('#note').val('');
+
+                $('#btnSaveNew').show();
+                $('#btnSave').hide();
+            },
+            save: function(isCreate) {
+                id = $('#addressId').val();
+                var url = '/Admin/AdminSupplier/Save';
+                var title = 'Do you want to UPDATE?';
+                if (isCreate) {
+                    url = '/Admin/AdminSupplier/Save';
+                    title = 'Do you want to CREATE?';
+                    id = '@Guid.Empty';
+                }
+
+                bootbox.confirm(title,
+                    function(result) {
+                        if (!result) return;
+
+                        $.post('/Admin/AdminSupplier/Save',
+                                {
+                                    isCreate: isCreate,
+                                    id: id,
+                                    addressName: $('#addressName').val(),
+                                    address: $('#address').val(),
+                                    addressLat: $('#address-lat').val(),
+                                    addressLng: $('#address-lng').val(),
+                                    phone: $('#phone').val(),
+                                    email: $('#email').val(),
+                                    note: $('#note').val()
+                                })
+                            .done(function(data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                    AdminSupplier.refresh();
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function() {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+
+                    });
+            },
+            delete: function(id) {
+                bootbox.confirm('Do you want to DELETE?',
+                    function(result) {
+
+                        if (!result) return;
+
+                        $.post('/Admin/AdminSupplier/Delete',
+                                {
+                                    id: id
+                                })
+                            .done(function(data) {
+                                if (data.Ok) {
+                                    toastr.success(data.Message);
+                                    AdminSupplier.refresh();
+                                } else {
+                                    toastr.error(data.Message);
+                                }
+                            }).fail(function() {
+                                bootbox.alert({
+                                    message: "Can not make request, check your internet and try to reload page",
+                                    backdrop: true
+                                });
+                            });
+
+                    });
+            },
+            refresh: function() {
+                AdminSupplier._$tblView.bootstrapTable('refresh');
+            },
+            _marker: null,
+            _map: null,
+            getCurrentLocationByBrowser:function(showPosition) {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(showPosition);
+                } else {
+
+                }
+            }
+        }
+
+        AdminSupplier.init();
+    </script>
+
+
+    <script>
+        
+        function initAutocomplete() {
+            var cancelAutoDetectLocation = false;
+            AdminSupplier._map = new google.maps.Map(document.getElementById('map'),
+                {
+                    center: { lat: 21.0286234, lng: 105.8437302 },
+                    zoom: 13,
+                    mapTypeId: 'roadmap'
+                });
+
+            // Create the search box and link it to the UI element.
+            var searchBox = new google.maps.places.SearchBox(document.getElementById('address'));
+            
+            AdminSupplier._marker = new google.maps.Marker({
+                position: { lat: 21.0286234, lng: 105.8437302 },
+                map: AdminSupplier._map,
+                title: 'Your are here'
+            });
+
+            AdminSupplier._marker.setMap(AdminSupplier._map);
+            AdminSupplier._map.panTo(AdminSupplier._marker.position);
+
+            $('#address-lat').val(AdminSupplier._marker.position.lat);
+            $('#address-lng').val(AdminSupplier._marker.position.lng);
+
+            AdminSupplier.getCurrentLocationByBrowser(function(browserPosition) {
+                if (cancelAutoDetectLocation) return;
+                AdminSupplier._marker.setMap(null);
+                AdminSupplier._marker = new google.maps.Marker({
+                    map: AdminSupplier._map,
+                    title: 'Your are here',
+                    position: { lat: browserPosition.coords.latitude, lng: browserPosition.coords.longitude }
+                });
+                AdminSupplier._marker.setMap(AdminSupplier._map);
+                AdminSupplier._map.panTo(AdminSupplier._marker.position);
+                $('#address-lat').val(browserPosition.coords.latitude);
+                $('#address-lng').val(browserPosition.coords.longitude);
+            });
+
+            AdminSupplier._map.addListener('click',
+                function(e) {
+                    cancelAutoDetectLocation = true;
+                    AdminSupplier._marker.setMap(null);
+                    AdminSupplier._marker = new google.maps.Marker({
+                        map: AdminSupplier._map,
+                        title: 'Your are here',
+                        position: e.latLng
+                    });
+                    AdminSupplier._marker.setMap(AdminSupplier._map);
+                    AdminSupplier._map.panTo(AdminSupplier._marker.position);
+                    $('#address-lat').val(AdminSupplier._marker.position.lat);
+                    $('#address-lng').val(AdminSupplier._marker.position.lng);
+                });
+
+            // Bias the SearchBox results towards current map's viewport.
+            AdminSupplier._map.addListener('bounds_changed',
+                function() {
+                    searchBox.setBounds(AdminSupplier._map.getBounds());
+                });
+
+            // Listen for the event fired when the user selects a prediction and retrieve
+            // more details for that place.
+            searchBox.addListener('places_changed',
+                function() {
+                    var places = searchBox.getPlaces();
+
+                    if (places.length == 0) {
+                        return;
+                    }
+                    cancelAutoDetectLocation = true;
+
+                    // For each place, get the icon, name and location.
+                    var bounds = new google.maps.LatLngBounds();
+                    places.forEach(function(place) {
+                        if (!place.geometry) {
+                            console.log("Returned place contains no geometry");
+                            return;
+                        }
+                        // Clear out the old markers.
+                        AdminSupplier._marker.setMap(null);
+                        // Create a marker for each place.
+                        AdminSupplier._marker = new google.maps.Marker({
+                            map: AdminSupplier._map,
+                            title: place.name,
+                            position: place.geometry.location
+                        });
+
+                        $('#address-lat').val(AdminSupplier._marker.position.lat);
+                        $('#address-lng').val(AdminSupplier._marker.position.lng);
+
+                        if (place.geometry.viewport) {
+                            // Only geocodes have viewport.
+                            bounds.union(place.geometry.viewport);
+                        } else {
+                            bounds.extend(place.geometry.location);
+                        }
+                    });
+                    AdminSupplier._map.fitBounds(bounds);
+                });
+        }
+    </script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=@(EngineeCurrentContext.GoogleMapApiKey)&libraries=places&callback=initAutocomplete"
+            async defer></script>
+}

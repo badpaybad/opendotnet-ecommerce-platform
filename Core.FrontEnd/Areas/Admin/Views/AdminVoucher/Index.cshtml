@@ -1,0 +1,56 @@
+﻿@model Core.FrontEnd.Areas.Admin.Models.AdminPageList<Core.FrontEnd.Areas.Admin.Models.FeVoucherMethod>
+
+@{
+    ViewBag.Title = "Voucher management";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Voucher management</h2>
+<div>
+    @foreach (var itm in Model.Items)
+    {
+        <div>
+            <h3>@itm.Name <a href="/Admin/AdminVoucher/ListCode?methodId=@itm.Id">Go to manage voucher code</a></h3>
+            @itm.AssemblyType<br/>
+            <textarea id="description-@itm.Id" type="text" placeholder="description" class="text-editor-200" style="height: 200px;">@itm.Description</textarea>
+        </div>
+        <button onclick="AdminPageList.saveDescription('@itm.Id')">Save</button>
+        <hr/>
+    }
+</div>
+
+@section scripts
+{
+    <script>
+        AdminPageList = {
+            init:function() {
+                //for (var edId in tinymce.get('.text-editor')) {
+                //    tinymce.editors[edId].theme.resizeTo(100, 100);;
+                //}
+            },
+            saveDescription: function (id) {
+                var data = {
+                    id: id,
+                    description: tinymce.get('description-'+id).getContent()
+                };
+                $.post('/Admin/AdminVoucher/UpdateDescription', data)
+                    .done(function(data) {
+                        if (data.Ok) {
+                            toastr.success(data.Message);
+                           
+                        } else {
+                            toastr.error(data.Message);
+                        }
+                    }).fail(function() {
+                        bootbox.alert({
+                            message: "Can not make request, check your internet and try to reload page",
+                            backdrop: true
+                        });
+                    });
+            }
+        }
+
+        AdminPageList.init();
+        Util.initTinyMceClassName('.text-editor-200', 100);
+    </script>
+}

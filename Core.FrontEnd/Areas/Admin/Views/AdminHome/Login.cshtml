@@ -1,0 +1,49 @@
+﻿@model dynamic
+
+@{
+    ViewBag.Title = "Login";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    var error = HttpContext.Current.Request.QueryString["error"];
+}
+<div class="row">
+    <div class="col-md-6">
+        @using (Html.BeginForm())
+        {
+            <div class="portlet light bordered">
+                <div class="portlet-title">
+                    <div class="caption">
+                        Login
+                    </div>
+                    
+                </div>
+                <div class="portlet-body form">
+
+                    <div class="form-group">
+                        <label class="control-label">Username</label>
+                        <input name="username" type="text" placeholder="username" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label">Username</label>
+                        <input name="password" type="password" placeholder="password" class="form-control">
+                    </div>
+                    @if (!string.IsNullOrEmpty(error))
+                    {
+                        <div class="form-group">
+                            <div class="alert alert-danger display-hide" style="display: block;">
+                                <button class="close" data-close="alert"></button>
+                                <span> @error </span>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="form-actions">
+
+                    <input class="btn btn-default" name="btnSubmit" type="submit" value="Submit">
+
+                </div>
+            </div>
+        }
+    </div>
+    <div class="col-md-6">&nbsp;</div>
+</div>

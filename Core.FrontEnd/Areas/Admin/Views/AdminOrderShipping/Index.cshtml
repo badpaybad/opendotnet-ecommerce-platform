@@ -1,0 +1,178 @@
+﻿@model dynamic
+
+@{
+    ViewBag.Title = "Order shipping";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Order shipping</h2>
+<h3>OrderCode: <input type="text" id="orderCode"/></h3>
+<button onclick="MediaDeviceDetector.checkOrderCode()">Check ordercode</button>
+<div id="videoSelect">waiting ...</div>
+<div style="position: relative;min-height: 320px;">
+    <div id="divAction" style="position: absolute; display: none; z-index:9999">
+        <div><textarea id="note" placeholder="note"></textarea></div>
+  <button onclick="MediaDeviceDetector.shipSuccess()">Ship success</button>
+        <button onclick="MediaDeviceDetector.shipCancel()">Cancel</button>
+        <button onclick="MediaDeviceDetector.shipFail()">Ship fail</button>
+    </div>
+    <div id="scanner" style="width: 320px; min-height: 320px;"></div>
+</div>
+
+@section scripts{
+    <script src="/Scripts/qrscanner/jsqrscanner.nocache.js"></script>
+    <script>
+
+        MediaDeviceDetector = {
+            $videoSelect: $('#videoSelect'),
+            _scanner: document.getElementById("scanner"),
+            _jbScanner: null,
+            $orderCode: $('#orderCode'),
+            init: function (jbScanner) {
+                MediaDeviceDetector.$videoSelect.html('detecting devices ...');
+                MediaDeviceDetector._jbScanner = jbScanner;
+                if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+                    MediaDeviceDetector.$videoSelect.html("enumerateDevices() not supported.");
+                    return;
+                }
+
+                navigator.mediaDevices.enumerateDevices()
+                    .then(function (devices) {
+                        var temp = '';
+                        devices.forEach(function (device) {
+                            temp += ' | <a onclick="MediaDeviceDetector.changeCamera(\'' + device.deviceId + '\')">' + device.label  + '</a>';
+                            console.log(device.kind + ": " + device.label +
+                                " id = " + device.deviceId);
+                        });
+                        MediaDeviceDetector.$videoSelect.html('Choose and point camera into qrcode to scan<br>' + temp);
+                    })
+                    .catch(function (err) {
+                        MediaDeviceDetector.$videoSelect.html(err.name + ": " + err.message);
+                    });
+            },
+            changeCamera: function (deviceId) {
+                MediaDeviceDetector._orderCode = null;
+                if (window.stream) {
+                    window.stream.getTracks().forEach(function(track) {track.stop();});
+                }
+                
+                try {
+                    MediaDeviceDetector._jbScanner.removeFrom(MediaDeviceDetector._scanner);
+                    
+                }catch(e){}
+                var constrain = {
+                    video: {
+                        exact: deviceId,
+                        deviceId: deviceId,
+                        facingMode:'environment'
+                    },
+                    audio: false
+                };
+
+                navigator.mediaDevices.getUserMedia(constrain)
+                    .then(function (stream) {
+                        //MediaDeviceDetector._scanner.srcObject = stream;
+                        MediaDeviceDetector._jbScanner.appendTo(MediaDeviceDetector._scanner);
+                      
+                    })
+                    .catch(function (err) {
+                        toastr.error("An error occured! " + err);
+                    });
+            },
+            scannedText: function (text) {
+                MediaDeviceDetector.$orderCode.val(text);
+                $('#divAction').show();
+            },
+            shipSuccess: function () {
+                var orderCode = MediaDeviceDetector.$orderCode.val();
+                var cfr = confirm('Order ship DONE?');
+                if (!cfr) return;
+                if (orderCode == null || orderCode == '') {
+                    alert('No detected order code, plz scan again');
+                    return;
+                }
+                $.post('/Admin/AdminPackingAndLabel/ShipSuccess',
+                        {
+                            orderCode: orderCode,
+                            note:$('#note').val()
+                        })
+                    .done(function(data) {
+                        if (data.Ok) {
+                            toastr.success(data.Message);
+                                } else {
+                            toastr.error(data.Message);
+                        }
+                    }).fail(function() {
+                        bootbox.alert({
+                            message: "Can not make request, check your internet and try to reload page",
+                            backdrop: true
+                        });
+                    });
+            },
+            shipCancel: function () {
+                MediaDeviceDetector.$orderCode.val('');
+                note:$('#note').val('');
+                $('#divAction').hide();
+            }
+            , shipFail: function () {
+                var orderCode = MediaDeviceDetector.$orderCode.val();
+                var cfr = confirm('Order ship FAIL?');
+                if (!cfr) return;
+                if (orderCode == null || orderCode == '') {
+                    alert('No detected order code, plz scan again');
+                    return;
+                }
+                $.post('/Admin/AdminPackingAndLabel/ShipFail',
+                        {
+                            orderCode: orderCode,
+                            note: $('#note').val()
+                        })
+                    .done(function(data) {
+                        if (data.Ok) {
+                            toastr.success(data.Message);
+                        } else {
+                            toastr.error(data.Message);
+                        }
+                    }).fail(function() {
+                        bootbox.alert({
+                            message: "Can not make request, check your internet and try to reload page",
+                            backdrop: true
+                        });
+                    });
+            }, checkOrderCode:function() {
+                $.post('/Admin/AdminPackingAndLabel/CheckOrderCode',
+                        {
+                            orderCode: MediaDeviceDetector.$orderCode.val()
+                        })
+                    .done(function(data) {
+                        if (data.Ok) {
+                            toastr.success(data.Message);
+                            $('#divAction').show();
+                        } else {
+                            toastr.error(data.Message);
+                            $('#divAction').hide();
+                        }
+                    }).fail(function() {
+                        bootbox.alert({
+                            message: "Can not make request, check your internet and try to reload page",
+                            backdrop: true
+                        });
+                    });
+            }
+        }
+
+        function JsQRScannerReady() {
+            //create a new scanner passing to it a callback function that will be invoked when
+            //the scanner succesfully scan a QR code
+            var jbScanner = new JsQRScanner(MediaDeviceDetector.scannedText);
+
+            //reduce the size of analyzed images to increase performance on mobile devices
+            jbScanner.setSnapImageMaxSize(320);
+
+            MediaDeviceDetector.init(jbScanner);
+
+        }
+
+
+    </script>
+}

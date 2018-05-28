@@ -1,0 +1,40 @@
+﻿@model System.Collections.Generic.List<Core.FrontEnd.Areas.Admin.Models.MonitorOrderItem>
+
+@{
+    Layout = null;
+
+}
+
+<table>
+    @*<tr>
+        <td>
+            Total: @Model.Count
+        </td>
+        <td>
+            Quantity
+        </td>
+        <td>
+            Title
+        </td>
+    </tr>*@
+    @foreach (var itm in Model)
+    {
+        var imgUrl = itm.UrlImage;
+        if (string.IsNullOrEmpty(imgUrl))
+        {
+            imgUrl = "/Content/imgs/no-image.png";
+        }
+
+        <tr class="row">
+            <td style="width: 90px;">
+                <img style="max-width: 90px; max-height: 65px;" src="@imgUrl" title="@itm.ProductCode" />
+            </td>
+            <td  style="width: 90px;">
+                @itm.Quantity
+            </td>
+            <td>
+             [@itm.ProductCode] @itm.Title
+            </td>
+        </tr>
+    }
+</table>

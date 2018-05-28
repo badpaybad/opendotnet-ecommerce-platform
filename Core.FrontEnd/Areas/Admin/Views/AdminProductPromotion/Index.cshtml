@@ -1,0 +1,226 @@
+﻿@model dynamic
+
+@{
+    ViewBag.Title = "Promotion for product";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Promotion for product</h2>
+<div class="row">
+    <div class="col-md-6">
+        <div>
+            <a href="javascript:" onclick="ProductPromotion.create()">Create new</a>
+        </div>
+        <table id="tblView"></table>
+    </div>
+    <div class="col-md-6">
+        <table>
+            <tr>
+                <td>Description</td>
+                <td>
+                    <textarea id="description" class="text-editor-100"></textarea>
+                </td>
+            </tr>
+
+            <tr>
+                <td>Product Quantity</td>
+                <td><input type="text" id="productQuantity" value="" /></td>
+            </tr>
+
+            <tr>
+                <td>Discount value</td>
+                <td><input type="text" id="discountValue"/> </td>
+            </tr>
+
+            <tr>
+                <td>
+                 
+                </td>
+                <td>
+                    <button id="btnSaveNew" onclick="ProductPromotion.save(true)" style="display:none">Save new</button>
+                    <button id="btnSave"  onclick="ProductPromotion.save(false)" style="display: none">Save</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        ProductPromotion = {
+            _selectedId:'@Guid.Empty',
+            init: function () {
+                Util.initTinyMceClassName('.text-editor-100', 100);
+
+                ProductPromotion.initTable();
+            },
+            initTable: function () {
+                $('#tblView').bootstrapTable({
+                    idField: 'Id',
+                    //data: AdminUser.arrayCheckedIds,
+                    method: 'post',
+                    url: '/Admin/AdminProductPromotion/List?__=' + (new Date().getTime()),
+                    sidePagination: 'server',
+                    pagination: true,
+                    showToggle: false,
+                    minimumCountColumns: 1,
+                    pageSize: 10,
+                    pageList: [10, 20, 50, 100, 200],
+                    showColumns: false,
+                    showRefresh: false,
+                    sortName: 'CreatedDate',
+                    sortOrder: 'desc',
+                    queryParams: function (p) {
+                        var keywords = '';
+
+                        return {
+                            sortField: p.sort,
+                            orderBy: p.order,
+                            take: p.limit,
+                            skip: p.offset,
+                            keywords: keywords
+                        };
+                    },
+                    columns: [
+                        {
+                            field: 'Description',
+                            title: 'Description',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value;
+                            }
+                        }, {
+                            field: 'ProductQuantity',
+                            title: 'Product Quantity',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value;
+                            }
+                        }, {
+                            field: 'DiscountValue',
+                            title: 'Discount Value',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                return value;
+                            }
+                        }, {
+                            field: 'Id',
+                            title: '',
+                            align: 'left',
+                            valign: 'middle',
+                            formatter: function (value, row) {
+                                var temp = '';
+                                temp += ' <a href="javascript:" onclick="ProductPromotion.edit(\'' +
+                                    row.Id +
+                                    '\',true)">Edit</a>';
+                                temp += ' | <a href="javascript:" onclick="ProductPromotion.delete(\'' +
+                                    row.Id +
+                                    '\')">Delete</a>';
+
+                                return temp;
+                            }
+                        }
+                    ]
+                });
+            },
+            delete: function(id) {
+                bootbox.confirm('Do you want to DELETE?', function(result) {
+                    if (!result) return;
+
+                    $.post('/Admin/AdminProductPromotion/Delete',
+                            {
+                                id: id
+                            })
+                        .done(function(data) {
+                            if (data.Ok) {
+                                toastr.success(data.Message);
+                                $('#tblView').bootstrapTable('refresh');
+                            } else {
+                                toastr.error(data.Message);
+                            }
+                        }).fail(function() {
+                            bootbox.alert({
+                                message: "Can not make request, check your internet and try to reload page",
+                                backdrop: true
+                            });
+                        });
+                });
+            },
+            edit:function(id) {
+                var rows = $('#tblView').bootstrapTable('getData');
+                var row=null;
+                for (var i = 0; i < rows.length; i++) {
+                    if (id == rows[i].Id) {
+                        row = rows[i];
+                        break;
+                    }
+                }
+
+                ProductPromotion._selectedId = id;
+                tinymce.get('description').setContent(row.Description);
+                $('#productQuantity').val(row.ProductQuantity);
+                $('#discountValue').val(row.DiscountValue);
+
+                $('#btnSaveNew').hide();
+                $('#btnSave').show();
+
+
+            }
+            ,
+            create:function() {
+                ProductPromotion._selectedId = '@Guid.Empty';
+                tinymce.get('description').setContent('');
+                $('#productQuantity').val('');
+                $('#discountValue').val('');
+                $('#btnSaveNew').show();
+                $('#btnSave').hide();
+            }
+            ,
+            save: function (isCreate) {
+                var description = tinymce.get('description').getContent();
+               var productQuantity=  $('#productQuantity').val();
+               var discountValue = $('#discountValue').val();
+
+                if (productQuantity == '' || discountValue == '') {
+                    alert('Product Quantity and Discount Valure are required');
+                    return;
+                }
+                var title = 'Do you want to SAVE?';
+                if (isCreate) {
+                    title = 'Do you want to CREATE NEW?';
+                }
+                bootbox.confirm(title, function(result) {
+                    if (!result) return;
+                    var id = ProductPromotion._selectedId;
+
+                    $.post('/Admin/AdminProductPromotion/Save',
+                            {
+                                id: id,
+                                description: description,
+                                productQuantity: productQuantity,
+                                discountValue: discountValue
+                            })
+                        .done(function(data) {
+                            if (data.Ok) {
+                                toastr.success(data.Message);
+                                $('#tblView').bootstrapTable('refresh');
+                            } else {
+                                toastr.error(data.Message);
+                            }
+                        }).fail(function() {
+                            bootbox.alert({
+                                message: "Can not make request, check your internet and try to reload page",
+                                backdrop: true
+                            });
+                        });
+                });
+            }
+        }
+
+        ProductPromotion.init();
+    </script>
+}

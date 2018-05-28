@@ -1,0 +1,28 @@
+﻿@using DomainDrivenDesign.Core
+@model Core.FrontEnd.Models.FeOrderPaymentPage
+@{
+    ViewBag.Title = "Cod";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var currentLang = EngineeCurrentContext.GetCurrentLanguage();
+}
+
+<h2>Order success</h2>
+<div>
+    Thanks for your order.
+</div>
+<div>
+    You choose CoD method. We will re-call to reconfirm and delivery to you at your address. 
+    <div>
+        Ship and billing at address:
+        <div>
+            To Name: @Model.Address.AddressName
+            <br />
+            To Address: @Model.Address.Address
+            <br />
+            Note:<br /> @Model.Address.Message
+        </div>
+    </div>
+    
+    <div>You must pay @(Model.Order.CartTotal* currentLang.CurrencyExchangeRate)@currentLang.CurrencyCode to our shipper</div>
+</div>
+<div><a href="/">Back to home</a></div>

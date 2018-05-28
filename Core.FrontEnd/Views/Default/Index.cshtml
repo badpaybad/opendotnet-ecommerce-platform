@@ -1,0 +1,18 @@
+﻿@model  Core.FrontEnd.Models.FeHomePage
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "core.frontend.ddd";
+    var firstSec = Model.Sections.FirstOrDefault();
+    var otherSec = Model.Sections.Where(i =>firstSec!=null&& i.Id != firstSec.Id).ToList();
+}
+@section slider{
+ @if (firstSec != null)
+ {
+     Html.RenderPartial(firstSec.ViewName, firstSec);
+ }
+}
+
+@foreach (var sec in otherSec)
+{
+    Html.RenderPartial(sec.ViewName,sec);
+}
