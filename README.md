@@ -14,6 +14,7 @@ open dotnet ecommerce platform base cqrs, ddd and event sourcing
 - Intergrated: tinyMce 3.7.x , Roxy fileman, google chart
 ## doing update document for developer as wiki on github
 
-https://docs.google.com/drawings/d/1hCTsRadUU9OF4uUHZ7ovPPuJ1szzQTYRDi9p_OVla6E/edit?usp=sharing
+overview architect
+https://drive.google.com/open?id=1gXg_EGkJttGkLbpnZNFRslgWzelvuc3M
 
 https://drive.google.com/open?id=1ZY-ZOTLB3s7D_E8uo-uUWvdMxkwwVY78
