@@ -10,7 +10,7 @@ open dotnet ecommerce platform base cqrs, ddd and event sourcing
 - Asp.net MVC 5
 - Jquery, boostrap, boostrap table, qrcode js
 - SignalR 2.1
-- MsSql 2008 or later ( can use any kind of db, just add provider for Entity framework)
+- MySql, or MsSql 2008 or later ( can use any kind of db, just add provider for Entity framework)
 - Intergrated: tinyMce 3.7.x , Roxy fileman, google chart
 ## Doing update documents for developer as wiki on github
 ### Developer guide
