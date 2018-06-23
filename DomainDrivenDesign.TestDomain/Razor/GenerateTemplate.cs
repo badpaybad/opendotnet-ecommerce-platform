@@ -48,70 +48,10 @@ namespace DomainDrivenDesign.TestDomain.Razor
                 template = template.Replace(firstMatch, rows);
             }
 
-          
-
         }
 
     }
-
-
-    public interface IAdditional
-    {
-
-    }
-
-    public class A : IAdditional
-    {
-        public void Ado()
-        {
-            
-        }
-    }
-
-    public class B : IAdditional
-    {
-        public void Bdo() { }
-    }
-
-    public static class AdditionalManager
-    {
-        static readonly ConcurrentDictionary<string, IAdditional> _map=new ConcurrentDictionary<string, IAdditional>();
-
-        public static void Register(string name, IAdditional obj)
-        {
-            _map[name] = obj;
-        }
-
-        public static T GetObject<T>(string name) where T : IAdditional
-        {
-            IAdditional obj;
-            if (_map.TryGetValue(name, out obj))
-            {
-                return (T)obj;
-            }
-
-            throw new NotImplementedException($"object with {name} not registered");
-        }
-    }
-
-    public static class Program
-    {
-        public static void Main()
-        {
-            //must regist when first run
-            AdditionalManager.Register("A", new A());
-            AdditionalManager.Register("B", new B());
-
-
-            //lol use anywhere in your application
-            var b = AdditionalManager.GetObject<B>("B");
-            b.Bdo();
-
-            var a = AdditionalManager.GetObject<A>("A");
-            a.Ado();
-        }
-    }
-
+    
     //public ActionResult ActionName (CustomRequest request) {
 
     //}
