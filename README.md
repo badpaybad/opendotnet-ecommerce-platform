@@ -10,6 +10,14 @@ open dotnet ecommerce platform base cqrs, ddd and event sourcing
 - Asp.net MVC 5
 - Jquery, boostrap, boostrap table, qrcode js
 - SignalR 2.1
-- MsSql 2008 or later ( can use any kind of db, just add provider for Entity framework)
+- MySql, or MsSql 2008 or later ( can use any kind of db, just add provider for Entity framework)
 - Intergrated: tinyMce 3.7.x , Roxy fileman, google chart
-## doing update document for developer as wiki on github
+## Doing update documents for developer as wiki on github
+### Developer guide
+https://github.com/badpaybad/opendotnet-ecommerce-platform/wiki/1.-For-Developer
+
+### Overview code structure and architect  
+https://docs.google.com/drawings/d/1hCTsRadUU9OF4uUHZ7ovPPuJ1szzQTYRDi9p_OVla6E/edit?usp=sharing
+
+### How to contribute?
+https://github.com/badpaybad/opendotnet-ecommerce-platform/wiki/How-to-contribute%3F
