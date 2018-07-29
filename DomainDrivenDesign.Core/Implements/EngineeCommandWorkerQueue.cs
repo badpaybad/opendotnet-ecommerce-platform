@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using DomainDrivenDesign.Core.Commands;
+using DomainDrivenDesign.Core.Redis;
+using Newtonsoft.Json;
+using StackExchange.Redis;
 
 namespace DomainDrivenDesign.Core.Implements
 {
@@ -43,7 +47,7 @@ namespace DomainDrivenDesign.Core.Implements
                         sw.Flush();
                     }
                 }
-             
+
                 Thread.Sleep(1000);
             }
             catch (Exception e)
@@ -58,7 +62,7 @@ namespace DomainDrivenDesign.Core.Implements
         //in-memory queue, can be use redis queue, rabitmq ...
         // remember dispatched by type of command
         static readonly ConcurrentDictionary<Type, ConcurrentQueue<ICommand>> _cmdDataQueue = new ConcurrentDictionary<Type, ConcurrentQueue<ICommand>>();
-      
+
         static readonly ConcurrentDictionary<Type, List<Thread>> _cmdWorker = new ConcurrentDictionary<Type, List<Thread>>();
         static readonly ConcurrentDictionary<Type, bool> _stopWorker = new ConcurrentDictionary<Type, bool>();
         static readonly ConcurrentDictionary<Type, int> _workerCounterStoped = new ConcurrentDictionary<Type, int>();
@@ -70,26 +74,54 @@ namespace DomainDrivenDesign.Core.Implements
         {
             var type = cmd.GetType();
 
-            if (_cmdDataQueue.ContainsKey(type) && _cmdDataQueue[type] != null)
+            if (RedisServices.IsEnable)
             {
-                //in-memory queue, can be use redis queue, rabitmq ...
-                _cmdDataQueue[type].Enqueue(cmd);
+                var queueName = BuildRedisQueueName(type);
+
+                if (RedisServices.RedisDatabase.KeyExists(queueName))
+                {
+                    RedisServices.RedisDatabase
+                        .ListLeftPush(queueName, JsonConvert.SerializeObject(cmd));
+                }
+                else
+                {
+                    _cmdTypeName[type.FullName] = type;
+
+                    RedisServices.RedisDatabase
+                        .ListLeftPush(queueName, JsonConvert.SerializeObject(cmd));
+
+                    InitFirstWorker(type);
+                }
             }
             else
             {
-                _cmdTypeName[type.FullName] =  type;
-//in-memory queue, can be use redis queue, rabitmq ...
-                _cmdDataQueue[type] = new ConcurrentQueue<ICommand>();
-                _cmdDataQueue[type].Enqueue(cmd);
+                if (_cmdDataQueue.ContainsKey(type) && _cmdDataQueue[type] != null)
+                {
+                    //in-memory queue, can be use redis queue, rabitmq ...
+                    _cmdDataQueue[type].Enqueue(cmd);
+                }
+                else
+                {
+                    _cmdTypeName[type.FullName] = type;
 
-                InitFirstWorker(type);
+                    //in-memory queue, can be use redis queue, rabitmq ...
+                    _cmdDataQueue[type] = new ConcurrentQueue<ICommand>();
+                    _cmdDataQueue[type].Enqueue(cmd);
+
+                    InitFirstWorker(type);
+                }
             }
 
         }
 
+        private static string BuildRedisQueueName(Type type)
+        {
+            return "EngineeCommandWorkerQueue_" + type.FullName;
+        }
+
         private static void InitFirstWorker(Type type)
         {
-            while (_stopWorker.ContainsKey(type)&& _stopWorker[type])
+            while (_stopWorker.ContainsKey(type) && _stopWorker[type])
             {
                 Thread.Sleep(100);
                 //wait stopping
@@ -130,13 +162,31 @@ namespace DomainDrivenDesign.Core.Implements
                     {
                         try
                         {
-                            if (_cmdDataQueue.TryGetValue(type, out ConcurrentQueue<ICommand> cmdQueue) &&
-                                cmdQueue != null)
+                            if (RedisServices.IsEnable)
                             {
-                                //in-memory queue, can be use redis queue, rabitmq ...
-                                if (cmdQueue.TryDequeue(out ICommand cmd) && cmd != null)
+                                var queueName = BuildRedisQueueName(type);
+
+                                var cmdJson = RedisServices.RedisDatabase
+                                    .ListRightPop(queueName);
+                                if (cmdJson.HasValue)
                                 {
-                                    MemoryMessageBuss.ExecCommand(cmd);
+                                    var cmd = JsonConvert.DeserializeObject(cmdJson, type) as ICommand;
+                                    if (cmd != null)
+                                    {
+                                        MemoryMessageBuss.ExecCommand(cmd);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if (_cmdDataQueue.TryGetValue(type, out ConcurrentQueue<ICommand> cmdQueue) &&
+                                    cmdQueue != null)
+                                {
+                                    //in-memory queue, can be use redis queue, rabitmq ...
+                                    if (cmdQueue.TryDequeue(out ICommand cmd) && cmd != null)
+                                    {
+                                        MemoryMessageBuss.ExecCommand(cmd);
+                                    }
                                 }
                             }
                         }
@@ -149,7 +199,7 @@ namespace DomainDrivenDesign.Core.Implements
                             Thread.Sleep(0);
                         }
                     }
-                    
+
                     if (!_workerCounterStoped.ContainsKey(type))
                     {
                         _workerCounterStoped[type] = 0;
@@ -195,19 +245,19 @@ namespace DomainDrivenDesign.Core.Implements
                 //wait all worker done its job
             }
 
-            List<Thread> threads;
+            //List<Thread> threads;
 
-            if (_cmdWorker.TryGetValue(type, out threads))
-            {
-                foreach (var t in threads)
-                {
-                    try
-                    {
-                        t.Abort();
-                    }
-                    catch { }
-                }
-            }
+            //if (_cmdWorker.TryGetValue(type, out threads))
+            //{
+            //    foreach (var t in threads)
+            //    {
+            //        try
+            //        {
+            //            t.Abort();
+            //        }
+            //        catch { }
+            //    }
+            //}
 
             _workerCounterStoped[type] = 0;
             _workerStoped[type] = false;
@@ -235,7 +285,7 @@ namespace DomainDrivenDesign.Core.Implements
                     thread.Start();
                 }
             }
-          
+
             return true;
         }
 
@@ -247,10 +297,18 @@ namespace DomainDrivenDesign.Core.Implements
             {
                 workerCount = list.Count;
             }
-
-            if (_cmdDataQueue.TryGetValue(type, out ConcurrentQueue<ICommand> queue) && queue != null)
+            if (RedisServices.IsEnable)
             {
-                queueDataCount = queue.Count;
+                var queueName = BuildRedisQueueName(type);
+
+                queueDataCount =(int) RedisServices.RedisDatabase.ListLength(queueName);
+            }
+            else
+            {
+                if (_cmdDataQueue.TryGetValue(type, out ConcurrentQueue<ICommand> queue) && queue != null)
+                {
+                    queueDataCount = queue.Count;
+                }
             }
         }
 

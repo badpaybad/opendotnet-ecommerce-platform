@@ -45,6 +45,9 @@
     <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.11.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="StackExchange.Redis, Version=1.2.6.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\StackExchange.Redis.1.2.6\lib\net46\StackExchange.Redis.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -56,6 +59,7 @@
     </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.Drawing.Design" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Management" />
     <Reference Include="System.Net.Http.Formatting, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Net.Http.WebRequest" />
@@ -118,6 +122,7 @@
     <Compile Include="Implements\Models\User.cs" />
     <Compile Include="Implements\Models\UserMessageTransaction.cs" />
     <Compile Include="Logs\UnhandleExceptionLogs.cs" />
+    <Compile Include="Redis\RedisServices.cs" />
     <Compile Include="Reflection\AssemblyExtesions.cs" />
     <Compile Include="Reflection\ICqrsHandle.cs" />
     <Compile Include="Reflection\PrivateReflectionDynamicObject.cs" />
