@@ -78,8 +78,7 @@ namespace Core.FrontEnd.Controllers
             }
 
             return Json(new { Ok = true, Data = new { email }, Message = "Success" }, JsonRequestBehavior.AllowGet);
-
-            return Json(new { Ok = true, Data = new {  }, Message = "Success" }, JsonRequestBehavior.AllowGet);
+            
         }
 
         [HttpPost]

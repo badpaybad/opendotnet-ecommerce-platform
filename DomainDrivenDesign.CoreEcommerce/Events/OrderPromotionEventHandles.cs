@@ -69,6 +69,7 @@ namespace DomainDrivenDesign.CoreEcommerce.Events
                     db.SaveChanges();
                 }
             }
+
         }
 
         public void Handle(OrderPromotionDeleted e)

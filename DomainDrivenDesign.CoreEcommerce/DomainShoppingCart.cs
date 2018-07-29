@@ -407,6 +407,8 @@ namespace DomainDrivenDesign.CoreEcommerce
             var id = Guid.Parse(Id);
             ApplyChange(new ShoppingCartLabelPackedAndPrinted(id, _orderCode));
         }
+
+        public void Refund(decimal amount) { }
     }
 
 }

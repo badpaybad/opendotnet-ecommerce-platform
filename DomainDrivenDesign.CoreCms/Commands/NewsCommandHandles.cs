@@ -25,7 +25,7 @@ namespace DomainDrivenDesign.CoreCms.Commands
 
         public void Handle(UpdateNews c)
         {
-            _repo.GetDoSave(c.Id, obj =>
+             _repo.GetDoSave(c.Id, obj =>
             {
                 obj.Update(c.AllowComment, c.Title, c.ShortDesciption, c.Description,c.UrlImage, c.LanguageId);
             });
