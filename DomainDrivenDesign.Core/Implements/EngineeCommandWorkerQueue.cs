@@ -55,7 +55,10 @@ namespace DomainDrivenDesign.Core.Implements
 
     public static class EngineeCommandWorkerQueue
     {
+        //in-memory queue, can be use redis queue, rabitmq ...
+        // remember dispatched by type of command
         static readonly ConcurrentDictionary<Type, ConcurrentQueue<ICommand>> _cmdDataQueue = new ConcurrentDictionary<Type, ConcurrentQueue<ICommand>>();
+      
         static readonly ConcurrentDictionary<Type, List<Thread>> _cmdWorker = new ConcurrentDictionary<Type, List<Thread>>();
         static readonly ConcurrentDictionary<Type, bool> _stopWorker = new ConcurrentDictionary<Type, bool>();
         static readonly ConcurrentDictionary<Type, int> _workerCounterStoped = new ConcurrentDictionary<Type, int>();
@@ -69,12 +72,13 @@ namespace DomainDrivenDesign.Core.Implements
 
             if (_cmdDataQueue.ContainsKey(type) && _cmdDataQueue[type] != null)
             {
+                //in-memory queue, can be use redis queue, rabitmq ...
                 _cmdDataQueue[type].Enqueue(cmd);
             }
             else
             {
                 _cmdTypeName[type.FullName] =  type;
-
+//in-memory queue, can be use redis queue, rabitmq ...
                 _cmdDataQueue[type] = new ConcurrentQueue<ICommand>();
                 _cmdDataQueue[type].Enqueue(cmd);
 
@@ -129,6 +133,7 @@ namespace DomainDrivenDesign.Core.Implements
                             if (_cmdDataQueue.TryGetValue(type, out ConcurrentQueue<ICommand> cmdQueue) &&
                                 cmdQueue != null)
                             {
+                                //in-memory queue, can be use redis queue, rabitmq ...
                                 if (cmdQueue.TryDequeue(out ICommand cmd) && cmd != null)
                                 {
                                     MemoryMessageBuss.ExecCommand(cmd);

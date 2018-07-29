@@ -156,18 +156,18 @@ namespace DomainDrivenDesign.TestDomain.Core.Utils
                 //wait all worker done its job
             }
 
-            List<Thread> threads;
+            //List<Thread> threads;
 
-            if (_cmdWorker.TryGetValue(type, out threads))
-            {
-                foreach (var t in threads)
-                {
-                    try
-                    {
-                        t.Abort();
-                    } catch { }
-                }
-            }
+            //if (_cmdWorker.TryGetValue(type, out threads))
+            //{
+            //    foreach (var t in threads)
+            //    {
+            //        try
+            //        {
+            //            t.Abort();
+            //        } catch { }
+            //    }
+            //}
             
             _workerCounterStoped[type] = 0;
             _workerStoped[type] = false;
