@@ -12,6 +12,7 @@ open dotnet ecommerce platform base cqrs, ddd and event sourcing
 - SignalR 2.1
 - MySql, or MsSql 2008 or later ( can use any kind of db, just add provider for Entity framework)
 - Intergrated: tinyMce 3.7.x , Roxy fileman, google chart
+- Micro-services with Redis queue (Redis on window https://github.com/MicrosoftArchive/redis/releases)
 ## Doing update documents for developer as wiki on github
 ### Developer guide
 https://github.com/badpaybad/opendotnet-ecommerce-platform/wiki/1.-For-Developer
