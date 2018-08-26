@@ -19,9 +19,9 @@ https://github.com/badpaybad/opendotnet-ecommerce-platform/wiki/1.-For-Developer
 
 ### Overview code structure and architect  
 https://docs.google.com/drawings/d/1hCTsRadUU9OF4uUHZ7ovPPuJ1szzQTYRDi9p_OVla6E/edit?usp=sharing
-Cqrs with microservices aws lambda, azure function, docker 
 
-https://docs.google.com/drawings/d/1jlyGG8TABS_sSUioo4_xY2S8P9W7QubnfOW1CNRKk-s/edit?usp=sharingCqrs with microservices aws lambda, azure function, docker 
+Cqrs with microservices using aws lambda, azure function, docker 
+https://docs.google.com/drawings/d/1jlyGG8TABS_sSUioo4_xY2S8P9W7QubnfOW1CNRKk-s/edit?usp=sharing 
 
 ### How to contribute?
 https://github.com/badpaybad/opendotnet-ecommerce-platform/wiki/How-to-contribute%3F
