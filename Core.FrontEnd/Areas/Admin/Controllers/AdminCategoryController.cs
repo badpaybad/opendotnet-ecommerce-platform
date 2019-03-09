@@ -93,7 +93,7 @@ namespace Core.FrontEnd.Areas.Admin.Controllers
         }
 
         public JsonResult Save(Guid id, string title, string categoryViewName
-            ,string seoKeywords,string seoDescription
+            ,string seoKeywords,string seoDescription, string seoUrlFriendly
             , bool isSinglePage, bool showInFrontEnd, short categoryType, bool isSaveNew = false)
         {
             var xtype = (Enums.CategoryType)categoryType;
@@ -102,13 +102,13 @@ namespace Core.FrontEnd.Areas.Admin.Controllers
             {
                 id = Guid.NewGuid();
                 MemoryMessageBuss.PushCommand(new CreateCategory(id, isSinglePage, showInFrontEnd, title
-                    ,seoKeywords,seoDescription
+                    ,seoKeywords,seoDescription, seoUrlFriendly
                     , categoryViewName, string.Empty, title, LanguageId, Guid.Empty, xtype, CurrentUserId, DateTime.Now));
             }
             else
             {
                 MemoryMessageBuss.PushCommand(new UpdateCategory(id, isSinglePage, showInFrontEnd, title
-                    , seoKeywords, seoDescription
+                    , seoKeywords, seoDescription, seoUrlFriendly
                     , categoryViewName, string.Empty, title, LanguageId, xtype, CurrentUserId, DateTime.Now));
             }
 

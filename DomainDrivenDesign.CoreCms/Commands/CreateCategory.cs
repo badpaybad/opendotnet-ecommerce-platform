@@ -1,14 +1,13 @@
-using System;
 using DomainDrivenDesign.Core;
-using DomainDrivenDesign.Core.Commands;
 using DomainDrivenDesign.Core.Implements.Commands;
+using System;
 
 namespace DomainDrivenDesign.CoreCms.Commands
 {
     public class CreateCategory : AdminBaseCommand
     {
         public CreateCategory(Guid id, bool isSinglePage, bool showInFrontEnd, string title
-            ,string seoKeywords,string seoDescription
+            , string seoKeywords, string seoDescription, string seoUrlFriendly
             , string categoryViewName, string iconUrl, string description, Guid languageId, Guid parentId, Enums.CategoryType type
             , Guid userId, DateTime createdDate) : base(userId, createdDate)
         {
@@ -18,6 +17,7 @@ namespace DomainDrivenDesign.CoreCms.Commands
             Title = title;
             SeoKeywords = seoKeywords;
             SeoDescription = seoDescription;
+            SeoUrlFriendly = seoUrlFriendly;
             CategoryViewName = categoryViewName;
             IconUrl = iconUrl;
             Description = description;
@@ -32,6 +32,7 @@ namespace DomainDrivenDesign.CoreCms.Commands
         public string Title { get; private set; }
         public string SeoKeywords { get; }
         public string SeoDescription { get; }
+        public string SeoUrlFriendly { get; }
         public string CategoryViewName { get; }
         public string IconUrl { get; private set; }
         public string Description { get; private set; }

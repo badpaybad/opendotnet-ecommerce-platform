@@ -16,11 +16,12 @@ namespace DomainDrivenDesign.CoreCms.Commands
         public string CategoryViewName { get; }
         public string IconUrl { get; }
         public string Description { get; }
+        public string SeoUrlFriendly { get; }
         public Guid LanguageId { get; }
         public Enums.CategoryType Type { get;  }
 
         public UpdateCategory(Guid id, bool isSinglePage, bool showInFrontEnd,string title
-            , string seoKeywords, string seoDescription
+            , string seoKeywords, string seoDescription, string seoUrlFriendly
             , string categoryViewName
             , string iconUrl, string description, Guid languageId, Enums.CategoryType type
             , Guid userId, DateTime createdDate) : base(userId, createdDate)
@@ -31,6 +32,7 @@ namespace DomainDrivenDesign.CoreCms.Commands
             Title = title;
             SeoKeywords = seoKeywords;
             SeoDescription = seoDescription;
+            SeoUrlFriendly = seoUrlFriendly;
             CategoryViewName = categoryViewName;
             IconUrl = iconUrl;
             Description = description;

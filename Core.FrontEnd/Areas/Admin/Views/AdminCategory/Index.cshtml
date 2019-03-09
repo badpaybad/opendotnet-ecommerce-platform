@@ -38,6 +38,10 @@
                     <label class="control-label">Seo description</label>
                     <input id="seoDescription" type="text" placeholder="seo description" class="form-control">
                 </div>
+                <div class="form-group">
+                    <label class="control-label">Seo friendly url</label>
+                    <input id="seoUrlFriendly" type="text" placeholder="seo friendly url" class="form-control">
+                </div>
                 <div class="form-group icheck-list">
 
                     <label class="control-label" for="showInFrontEnd">
@@ -59,13 +63,13 @@
                         <label class="control-label">Tempalte display in Fe (FrontEnd )</label>
                         <div class="icheck-list category-type-radio">
                             @foreach (var t in Model.ListCategoryType)
-                            { 
+                            {
                                 <label class="control-label" for="radCategoryType-@t.Key">
-                                <input name="categorytype" id="radCategoryType-@t.Key" class="icheck"
-                                       value="@t.Key" data-id="@t.Key"
-                                       type="radio" /> @t.Value
-                                </label>
-                            }
+                                    <input name="categorytype" id="radCategoryType-@t.Key" class="icheck"
+                                           value="@t.Key" data-id="@t.Key"
+                                           type="radio" /> @t.Value
+                                    </label>
+                                }
                         </div>
                     </div>
                     <div class="category-choose-template">
@@ -99,8 +103,8 @@
                                     <a class="dropdown-item" href="javascript:" onclick="$('#categoryViewName').val('')">Default</a>
                                     @foreach (var cvn in Model.ListCategoryProductViewName)
                                     {
-                                    <a class="dropdown-item" href="javascript:"
-                                       onclick="$('#categoryViewName').val('@cvn')">@cvn</a>
+                                        <a class="dropdown-item" href="javascript:"
+                                           onclick="$('#categoryViewName').val('@cvn')">@cvn</a>
                                     }
                                 </div>
                             </li>
@@ -220,6 +224,7 @@
                     $('#title').val('');
                     $('#seoKeywords').val('');
                     $('#seoDescription').val('');
+                    $('#seoUrlFriendly').val('');
                     $('#categoryViewName').val('');
                     $('#radCategoryType-0').iCheck('check');
                     return;
@@ -239,6 +244,7 @@
                             $('#title').val(data.Data.Title);
                             $('#seoKeywords').val(data.Data.SeoKeywords);
                             $('#seoDescription').val(data.Data.SeoDescription);
+                            $('#seoUrlFriendly').val(data.Data.SeoUrlFriendly);
                             $('#categoryViewName').val(data.Data.CategoryViewName);
 
                             $('#showInFrontEnd').iCheck('uncheck');
@@ -283,6 +289,7 @@
                                     title: $('#title').val(),
                                     seoKeywords: $('#seoKeywords').val(),
                                     seoDescription: $('#seoDescription').val(),
+                                    seoUrlFriendly: $('#seoUrlFriendly').val(),
                                     categoryViewName: $('#categoryViewName').val(),
                                     isSaveNew: isSaveNew,
                                     isSinglePage: $('#isSinglePage').is(":checked"),

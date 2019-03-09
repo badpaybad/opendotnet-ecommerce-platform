@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DomainDrivenDesign.Core;
-using DomainDrivenDesign.Core.Events;
+﻿using DomainDrivenDesign.Core;
 using DomainDrivenDesign.Core.Implements;
 using DomainDrivenDesign.Core.Implements.Events;
 using DomainDrivenDesign.Core.Utils;
 using DomainDrivenDesign.CoreCms.Events;
+using System;
+using System.Linq;
 
 namespace DomainDrivenDesign.CoreCms
 {
@@ -60,8 +56,8 @@ namespace DomainDrivenDesign.CoreCms
         }
 
         public DomainCategory(Guid id, bool isSinglePage, bool showInFrontEnd, string title
-            ,string seoKeywords,string seoDescription
-            ,string categoryViewName, string iconUrl, string description
+            , string seoKeywords, string seoDescription, string seoUrlFriendly
+            , string categoryViewName, string iconUrl, string description
           , Guid languageId, Guid parentId, Enums.CategoryType type)
         {
             //if (IsExistedTitle(title, null)) throw new Exception("Title was duplicated");
@@ -70,46 +66,59 @@ namespace DomainDrivenDesign.CoreCms
             ApplyChange(new ContentLanguageUpdated(id, languageId, "IconUrl", iconUrl, "Category"));
             ApplyChange(new ContentLanguageUpdated(id, languageId, "Description", description, "Category"));
             var seoUrl = title.ToUrlSegment();
+            if (!string.IsNullOrEmpty(seoUrlFriendly))
+            {
+                seoUrl = seoUrlFriendly;
+            }
             int seoCount = 0;
             while (IsExistFriendlyUrl(seoUrl))
             {
-                seoUrl = seoUrl + "-"+ seoCount;
+                seoUrl = seoUrl + "-" + seoCount;
                 seoCount++;
             }
             ApplyChange(new ContentLanguageUpdated(id, languageId, "SeoUrlFriendly", seoUrl, "Category"));
             ApplyChange(new ContentLanguageUpdated(id, languageId, "SeoKeywords", seoKeywords, "Category"));
             ApplyChange(new ContentLanguageUpdated(id, languageId, "SeoDescription", seoDescription, "Category"));
             ApplyChange(new UrlFriendlyCreated(seoUrl, "Category", id, "Category", "Index"));
-            ApplyChange(new CategoryCreated(id, isSinglePage, showInFrontEnd, parentId, categoryViewName,type));
+            ApplyChange(new CategoryCreated(id, isSinglePage, showInFrontEnd, parentId, categoryViewName, type));
 
         }
 
         public void Update(bool isSinglePage, bool showInFrontEnd, string title
-            , string seoKeywords, string seoDescription
+            , string seoKeywords, string seoDescription, string seoUrlFriendly
             , string categoryViewName, string iconUrl, string description
             , Guid languageId, Enums.CategoryType type)
         {
             var id = Guid.Parse(Id);
-            
+
             ApplyChange(new ContentLanguageUpdated(id, languageId, "Title", title, "Category"));
             ApplyChange(new ContentLanguageUpdated(id, languageId, "IconUrl", iconUrl, "Category"));
             ApplyChange(new ContentLanguageUpdated(id, languageId, "Description", description, "Category"));
             var seoUrl = title.ToUrlSegment();
-            if (IsExistedTitle(title, id)) {
-                int seoCount = 0;
-                while (IsExistFriendlyUrl(seoUrl))
+            if (!string.IsNullOrEmpty(seoUrlFriendly))
+            {
+                seoUrl = seoUrlFriendly;
+            }
+            else
+            {
+                if (IsExistedTitle(title, id))
                 {
-                    seoUrl = seoUrl + "-" + seoCount;
-                    seoCount++;
+                    int seoCount = 0;
+                    while (IsExistFriendlyUrl(seoUrl))
+                    {
+                        seoUrl = seoUrl + "-" + seoCount;
+                        seoCount++;
+                    }
                 }
             }
+
             ApplyChange(new ContentLanguageUpdated(id, languageId, "SeoUrlFriendly", seoUrl, "Category"));
             ApplyChange(new ContentLanguageUpdated(id, languageId, "SeoKeywords", seoKeywords, "Category"));
             ApplyChange(new ContentLanguageUpdated(id, languageId, "SeoDescription", seoDescription, "Category"));
             ApplyChange(new UrlFriendlyCreated(seoUrl, "Category", id, "Category", "Index"));
 
-            ApplyChange(new CategoryUpdated(id, isSinglePage, showInFrontEnd, categoryViewName,type));
-         
+            ApplyChange(new CategoryUpdated(id, isSinglePage, showInFrontEnd, categoryViewName, type));
+
         }
 
         public void ChangeRoot(Guid parentId)
