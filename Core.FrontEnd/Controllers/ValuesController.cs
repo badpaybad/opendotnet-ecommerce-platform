@@ -8,12 +8,11 @@ using DomainDrivenDesign.CorePermission.Reflections;
 
 namespace Core.FrontEnd.Controllers
 {
-    public class TestController : ApiController
+    public class OddsController : ApiController
     {
-        [System.Web.Http.Route("api/test/check")]
-        [RightDescription("test check")]
-        [HttpPost]
-        public string Check()
+        [System.Web.Http.Route("api")]
+        [RightDescription("api odds 1x2")]
+        public string Odd1x2()
         {
             return string.Empty;
         }

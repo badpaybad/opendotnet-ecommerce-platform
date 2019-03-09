@@ -21,8 +21,11 @@
     <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="/Content/modern-business.css" rel="stylesheet" />
     <link href="/assets/global/plugins/bootstrap-toastr/toastr.min.css" rel="stylesheet" type="text/css" />
-    <link href="~/assets/tinymce/prism.css" rel="stylesheet" /> 
+    <link href="/assets/tinymce/prism.css" rel="stylesheet" />
+
+    <link href="/assets/Select2/css/select2.css" rel="stylesheet" />
     <link href="/Content/Site.css" rel="stylesheet" />
+
     @RenderSection("head", required: false)
 </head>
 <body>
@@ -36,7 +39,7 @@
             <div class="row">
                 <div class="col-md-6 slogan">
                     Nguyễn Phan Du's personal webiste
-                    <br/><i>Knowledge should be shared</i>
+                    <br /><i>Knowledge should be shared</i>
                 </div>
                 <div class="col-md-6">
                     <div>
@@ -140,6 +143,8 @@
         MainMenu.init();
     </script>
     <script src="/Scripts/site.js"></script>
+
+    <script src="/assets/Select2/js/select2.full.js"></script>
     <script>
         ShoppingCart.init();
     </script>
@@ -172,7 +177,7 @@
 
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-11914233-1"></script>
-<script>
+    <script>
     window.dataLayer = window.dataLayer || [];
 
     function gtag() { dataLayer.push(arguments); }
@@ -181,7 +186,7 @@
 
     gtag('config', 'UA-11914233-1');
 
-</script>
-  
+    </script>
+
 </body>
 </html>

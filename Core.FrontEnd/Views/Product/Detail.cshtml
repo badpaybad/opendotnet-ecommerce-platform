@@ -9,6 +9,7 @@
     var currentUser = UserSessionContext.CurrentUser();
     var exchanageRate = EngineeCurrentContext.GetCurrencyExchangeRate();
     var currencyCode = EngineeCurrentContext.GetCurrencyCode();
+    var clientId = Model.GetHashCode().ToString().Trim('-');
 
 }
 @section MetaSEO
@@ -78,11 +79,11 @@
         @if (Model.Galleries != null && Model.Galleries.Count > 0)
         {
             <header>
-                <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
+                <div id="detailSlide@(clientId)" class="carousel slide" data-ride="carousel">
                     <ol class="carousel-indicators">
                         @for (var i = 0; i < Model.Galleries.Count; i++)
                         {
-                        <li data-target="#carouselExampleIndicators" data-slide-to="@i" class="@(i==0?"active":"")"></li>
+                        <li data-target="#detailSlide@(clientId)" data-slide-to="@i" class="@(i==0?"active":"")"></li>
                         }
                     </ol>
                     <div class="carousel-inner" role="listbox">
@@ -94,11 +95,11 @@
                             </div>
                         }
                     </div>
-                    <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
+                    <a class="carousel-control-prev" href="#detailSlide@(clientId)" role="button" data-slide="prev">
                         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                         <span class="sr-only">Previous</span>
                     </a>
-                    <a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-slide="next">
+                    <a class="carousel-control-next" href="#detailSlide@(clientId)" role="button" data-slide="next">
                         <span class="carousel-control-next-icon" aria-hidden="true"></span>
                         <span class="sr-only">Next</span>
                     </a>

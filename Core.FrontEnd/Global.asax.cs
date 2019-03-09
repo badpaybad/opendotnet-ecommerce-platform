@@ -33,13 +33,14 @@ namespace Core.FrontEnd
             BundleConfig.RegisterBundles(BundleTable.Bundles);
             AppDomain.CurrentDomain.AssemblyLoad += CurrentDomain_AssemblyLoad;
 
-            new CreateDatabaseIfNotExists<DomainDrivenDesign.CoreEcommerce.Ef.CoreEcommerceDbContext>().InitializeDatabase(new DomainDrivenDesign.CoreEcommerce.Ef.CoreEcommerceDbContext());
+           // new CreateDatabaseIfNotExists<DomainDrivenDesign.CoreEcommerce.Ef.CoreEcommerceDbContext>().InitializeDatabase(new DomainDrivenDesign.CoreEcommerce.Ef.CoreEcommerceDbContext());
 
             MemoryMessageBuss.AutoRegister();
 
             DomainDrivenDesign.Core.EngineeCurrentContext.Init();
 
             EngineePermission.Init();
+
             EngineeEcommerce.Init();
 
             EngineeEmailSender.Init();

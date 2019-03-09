@@ -19,7 +19,7 @@ namespace DomainDrivenDesign.Core
 
         static EngineeCurrentContext()
         {
-            InitLanguage();
+           
         }
 
         public static Guid LanguageId
@@ -92,7 +92,7 @@ namespace DomainDrivenDesign.Core
 
         public static void Init()
         {
-
+            InitLanguage();
         }
 
         public static string GoogleMapApiKey
