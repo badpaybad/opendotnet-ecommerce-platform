@@ -23,12 +23,11 @@
                     else
                     {
                         <li class="nav-item dropdown">
-                            <a class="nav-link nav-link-text-arrow" href="/Category/@m.SeoUrlFriendly">@m.Title</a>
-                            <a class="nav-link nav-link-arrow dropdown-toggle" href="/Category/@m.SeoUrlFriendly" id="@m.Id"
+                            <a class="nav-link nav-link-text-arrow" href="/Category/@m.SeoUrlFriendly">@m.Title
+                            </a><a class="nav-link nav-link-arrow dropdown-toggle" href="/Category/@m.SeoUrlFriendly" id="@m.Id"
                                                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 
                             </a>
-
                             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="@m.Id">
                                 @*<a class="dropdown-item" href="/Category/@m.SeoUrlFriendly">@m.Title</a>*@
                                 @foreach (var s in m.SubItems)
@@ -48,7 +47,7 @@
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="site-lang-text"
                          id="site-lang-ul"></div>
                 </li>
-                <li class="nav-item" id="shopping-cart-mini" 
+                @*<li class="nav-item" id="shopping-cart-mini" 
                     onclick="window.location='/ShoppingCart/Index'" title="go to shopping cart">
                     <a onclick="window.location = '/ShoppingCart/Index'"
                        class="nav-link copa-shopping-cart">
@@ -59,7 +58,7 @@
                 <li>
                     <a href="javascript:" class="nav-link"  onclick="ShoppingCart.createNew()"
                        title="create new cart">[x]</a>
-                </li>
+                </li>*@
             </ul>
         </div>
     </div>

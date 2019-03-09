@@ -56,7 +56,7 @@
     text-align: right;    
 }
 .copa-head {
-    height: 75px;
+    min-height: 75px;
     padding: 0px;
     background-color: #8d480a;
     padding-left: 0px;
