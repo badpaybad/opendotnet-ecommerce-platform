@@ -43,17 +43,39 @@ namespace DomainDrivenDesign.CoreCms
             return false;
         }
 
+        bool IsExistFriendlyUrl(string urlsegement)
+        {
+            using (var db = new CoreDbContext())
+            {
+                if (db.ContentLanguages.Any(i => i.TableName.Equals("Category", StringComparison.OrdinalIgnoreCase)
+                && i.ColumnName.Equals("SeoUrlFriendly", StringComparison.OrdinalIgnoreCase)
+                && i.ColumnValue.Equals(urlsegement, StringComparison.OrdinalIgnoreCase))
+                )
+                {
+                    return true;
+                }
+
+            }
+            return false;
+        }
+
         public DomainCategory(Guid id, bool isSinglePage, bool showInFrontEnd, string title
             ,string seoKeywords,string seoDescription
             ,string categoryViewName, string iconUrl, string description
           , Guid languageId, Guid parentId, Enums.CategoryType type)
         {
-            if (IsExistedTitle(title, null)) throw new Exception("Title was duplicated");
+            //if (IsExistedTitle(title, null)) throw new Exception("Title was duplicated");
 
             ApplyChange(new ContentLanguageUpdated(id, languageId, "Title", title, "Category"));
             ApplyChange(new ContentLanguageUpdated(id, languageId, "IconUrl", iconUrl, "Category"));
             ApplyChange(new ContentLanguageUpdated(id, languageId, "Description", description, "Category"));
             var seoUrl = title.ToUrlSegment();
+            int seoCount = 0;
+            while (IsExistFriendlyUrl(seoUrl))
+            {
+                seoUrl = seoUrl + "-"+ seoCount;
+                seoCount++;
+            }
             ApplyChange(new ContentLanguageUpdated(id, languageId, "SeoUrlFriendly", seoUrl, "Category"));
             ApplyChange(new ContentLanguageUpdated(id, languageId, "SeoKeywords", seoKeywords, "Category"));
             ApplyChange(new ContentLanguageUpdated(id, languageId, "SeoDescription", seoDescription, "Category"));
@@ -68,13 +90,19 @@ namespace DomainDrivenDesign.CoreCms
             , Guid languageId, Enums.CategoryType type)
         {
             var id = Guid.Parse(Id);
-
-            if (IsExistedTitle(title, id)) throw new Exception("Title was duplicated");
-
+            
             ApplyChange(new ContentLanguageUpdated(id, languageId, "Title", title, "Category"));
             ApplyChange(new ContentLanguageUpdated(id, languageId, "IconUrl", iconUrl, "Category"));
             ApplyChange(new ContentLanguageUpdated(id, languageId, "Description", description, "Category"));
             var seoUrl = title.ToUrlSegment();
+            if (IsExistedTitle(title, id)) {
+                int seoCount = 0;
+                while (IsExistFriendlyUrl(seoUrl))
+                {
+                    seoUrl = seoUrl + "-" + seoCount;
+                    seoCount++;
+                }
+            }
             ApplyChange(new ContentLanguageUpdated(id, languageId, "SeoUrlFriendly", seoUrl, "Category"));
             ApplyChange(new ContentLanguageUpdated(id, languageId, "SeoKeywords", seoKeywords, "Category"));
             ApplyChange(new ContentLanguageUpdated(id, languageId, "SeoDescription", seoDescription, "Category"));

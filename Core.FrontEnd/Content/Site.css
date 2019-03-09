@@ -37,6 +37,16 @@
     color: #c8974c;
 }
 
+.nav-link {
+    display:inline-block!important;
+}
+.nav-link-arrow{
+    padding-left:0px!important;
+}
+
+.nav-link-text-arrow {
+    padding-right: 0px !important;
+}
 .copa-footer {
     background-color: #8d480a;
     padding: 20px;

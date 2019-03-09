@@ -17,25 +17,27 @@
                     if (m.SubItems.Count == 0)
                     {
                         <li class="nav-item">
-                            <a class="nav-link" href="/Category/@m.SeoUrlFriendly">@m.Title</a>
+                           <a class="nav-link" href="/Category/@m.SeoUrlFriendly">@m.Title</a>
                         </li>
                     }
                     else
                     {
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="/Category/@m.SeoUrlFriendly" id="@m.Id"
-                               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                @m.Title
+                            <a class="nav-link nav-link-text-arrow" href="/Category/@m.SeoUrlFriendly">@m.Title</a>
+                            <a class="nav-link nav-link-arrow dropdown-toggle" href="/Category/@m.SeoUrlFriendly" id="@m.Id"
+                                                                       data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                
                             </a>
-                
+
                             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="@m.Id">
-                                <a class="dropdown-item" href="/Category/@m.SeoUrlFriendly">@m.Title</a>
+                                @*<a class="dropdown-item" href="/Category/@m.SeoUrlFriendly">@m.Title</a>*@
                                 @foreach (var s in m.SubItems)
                                 {
-                                    <a class="dropdown-item" href="/Category/@s.SeoUrlFriendly">@s.Title</a>
+                                    <a class="dropdown-item" title="@m.Title - @s.Title" href="/Category/@s.SeoUrlFriendly">@s.Title</a>
                                 }
                             </div>
-                        </li> }
+                        </li> 
+                    }
 
                 }
                 <li class="nav-item dropdown" id="mainLiLangList" style="display: none;">
